@@ -38,6 +38,17 @@ your-company-brain/
 Every entity follows the same rhythm: a `main.md` with a living **"State as of …"** block,
 dated `logs/`, topic `notes/`, and a `people.md` you read *before* you write to someone.
 
+## Two layers: brain, then blocks
+
+Sunday installs in two layers:
+
+1. **The brain** — memory and rules, built by the founding interview. Every business starts here.
+2. **The blocks** — the working machinery: a dashboard, agents (inbox triage, task-runner,
+   prospection…), connectors. Your agent consolidates the blocks *you* pick into your own private
+   Command Center, wired to your tools. See [`blocks/`](blocks/).
+
+Stop after the brain and add blocks later, or build the whole Command Center in one go.
+
 ## How to run it
 
 1. Install [Claude Code](https://claude.com/claude-code).

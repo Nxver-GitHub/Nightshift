@@ -97,3 +97,12 @@ Show the founder the final tree and tell them how to live in it:
 > `git pull` in the kit folder — your brain is untouched."
 
 Then hand back control. Don't keep going unless they ask.
+
+## Step 8 — Assemble the Command Center (optional; now or later)
+
+The brain is memory; **blocks** are hands. If the founder wants a dashboard and working agents —
+now or in a later session — read `blocks/README.md`, present the menu, and consolidate the blocks
+they pick into a private `command-center/` in their brain, wired to their tools, in review mode.
+Install one block at a time and verify each before the next. Never run a block on real data without
+an explicit yes. It's completely fine to end with the brain only and assemble blocks later
+(`/sunday-assemble`).

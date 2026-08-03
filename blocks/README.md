@@ -21,7 +21,7 @@ That's the model: Sunday ships the parts; your agent assembles the machine for y
 | Block | What it gives you | Status |
 |---|---|---|
 | `dashboard` | The Command Center web UI — a chat + widgets over your brain | planned |
-| `taskrunner` | A kanban the agents work through, self-paced, only closed when verified done | planned |
+| `taskrunner` | A kanban the agents work through, self-paced, only closed when verified done | **built** |
 | `email-operator` | Inbox triage → drafts + queued tasks; never sends without your yes | planned |
 | `crm` | Companies / contacts / projects / interactions, each with a dated next action | planned |
 | `prospection` | Outbound engine on top of the CRM ("nothing sleeps") | planned |

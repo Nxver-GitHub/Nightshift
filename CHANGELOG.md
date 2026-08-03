@@ -2,6 +2,17 @@
 
 Append-only. Newest entries on top. Date format `YYYY-MM-DD`.
 
+## 2026-08-03 — first block: taskrunner
+- Built `blocks/taskrunner/` — the first real block, generalized from a working system.
+- `code/`: `add_task.py`, `update_task.py`, `list_tasks.py`, seed `tasks.json`. Atomic, lock-based,
+  concurrency-safe writes; visible plan (steps); owner question + finalization gate for irreversible
+  gestures; due-date reschedule counter. Config-driven: `TASKRUNNER_OWNER`, `TASKRUNNER_TASKS`/`--tasks`.
+- `skill/taskrunner.md`: the role — tick loop, claim-before-work, "the runner judges completion",
+  reversible/irreversible boundary, close-and-update-the-brain.
+- No secrets, no hardcoded paths, "the owner" replaces any specific person. Smoke-tested end to end
+  (add → claim → steps → finalize → guards → board); all three scripts compile.
+- Catalog updated: `taskrunner` = built.
+
 ## 2026-08-03 — blocks layer (framework)
 - Introduced the second layer: `blocks/` — a catalog of generalized, config-driven capabilities the
   founder's agent consolidates into their own private Command Center.

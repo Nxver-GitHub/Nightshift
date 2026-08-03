@@ -2,6 +2,17 @@
 
 Append-only. Newest entries on top. Date format `YYYY-MM-DD`.
 
+## 2026-08-03 — taskrunner runtime + operate runbook
+- Added the "trigger" layer so the block runs like the source system: `code/start-taskrunner.sh`
+  (persistent `claude --remote-control … "/loop /taskrunner"` session + auto-relaunch + `.taskrunner.on`
+  on/off flag + PID anti-double-instance lock + macOS `caffeinate` keep-awake, no-op elsewhere) and
+  `code/stop-taskrunner.sh`.
+- Added `SETUP.md` — the install & operate runbook for the founder's Claude Code: place code, install
+  the skill into `~/.claude/skills/taskrunner/SKILL.md`, configure via env (no secrets), start, verify,
+  operate, plus the `--permission-mode auto` + finalization-gate safety rationale and platform notes.
+- Config-driven: `TASKRUNNER_DIR/SESSION/MODEL/SKILL`. Launcher tested (syntax, anti-double-instance
+  guard, clean stop); the live `claude` invocation isn't runnable in CI but its surrounding logic is.
+
 ## 2026-08-03 — first block: taskrunner
 - Built `blocks/taskrunner/` — the first real block, generalized from a working system.
 - `code/`: `add_task.py`, `update_task.py`, `list_tasks.py`, seed `tasks.json`. Atomic, lock-based,

@@ -12,8 +12,9 @@ goes. It bothers you (the owner) at exactly two moments: to confirm an irreversi
 (finalization), or when it hits a real blocker. Everything else, it decides on its own.
 
 ## What it needs
-- **Tools / accounts**: none external. Python 3 and your Claude Code session. Optional: whatever
-  connectors your tasks touch (email, hosting…) — those belong to *other* blocks, not this one.
+- **Tools / accounts**: none external. Python 3, Claude Code (for the `/loop` session and the
+  installed skill), and a bash shell (macOS/Linux) for the launcher. Optional: whatever connectors
+  your tasks touch (email, hosting…) — those belong to *other* blocks, not this one.
 - **Config the agent must fill**:
   - `TASKRUNNER_OWNER` (env) — the human who confirms irreversible steps. Default: `the owner`.
   - `TASKRUNNER_TASKS` (env) or `--tasks PATH` — where `tasks.json` lives. Default: next to the scripts.
@@ -26,17 +27,20 @@ goes. It bothers you (the owner) at exactly two moments: to confirm an irreversi
 - `code/update_task.py` — evolve one task: claim, journal, visible plan (steps), ask the owner a
   question, raise a problem banner, propose finalization of irreversible gestures, record the result.
 - `code/list_tasks.py` — print the board grouped by status (read-only).
+- `code/start-taskrunner.sh` — the **launcher**: starts the persistent `/loop` session, auto-relaunches
+  it if it dies, guards against a second instance (PID lock), keeps the machine awake. This is the
+  "trigger" layer.
+- `code/stop-taskrunner.sh` — clean stop (removes the on/off flag; the loop finishes its tick, then exits).
 - `skill/taskrunner.md` — the role: the tick loop, claim-before-work, "the runner judges
   completion", the reversible/irreversible boundary, and how it closes a task.
+- `SETUP.md` — the install & operate runbook the founder's Claude Code follows to set it all up and run it.
 
 ## How the agent installs it
-1. Copy `code/` into the founder's `command-center/taskrunner/`.
-2. Decide where `tasks.json` lives (default is fine) and set `TASKRUNNER_OWNER` to the founder's name
-   — via a small env file the command-center loads, never a secret in git.
-3. Install `skill/taskrunner.md` as a skill, and run it in a dedicated Claude Code session with
-   `/loop` (no interval — self-paced).
-4. Verify end-to-end: add a throwaway task, watch the runner claim → work → verify → close, then
-   delete it. Only then let it run on real work.
+Follow `SETUP.md` — the full install & operate runbook. In short: place `code/` in the founder's
+`command-center/taskrunner/`; install `skill/taskrunner.md` into `~/.claude/skills/taskrunner/SKILL.md`
+so `/taskrunner` resolves; set `TASKRUNNER_OWNER` (and optional paths/model) via an env file, never a
+secret in git; start the persistent session with `./start-taskrunner.sh`; verify with a throwaway task
+before real work goes through it.
 
 ## Safety
 Inherits the brain's safety floor (`CLAUDE.md`). The runner does everything **reversible** on its own

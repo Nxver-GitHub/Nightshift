@@ -1,0 +1,21 @@
+# The kit is public. Never commit a generated brain or any real data into it.
+# Real brains are generated in a SIBLING folder (../<name>-brain), outside this repo.
+# These root-anchored patterns are a safety net for anything created inside the repo by mistake.
+# (Leading slash = root-only, so they do NOT catch examples/acme-brain — the shipped demo.)
+/brain/
+/*-brain/
+
+# Secrets — never, ever
+.env
+.env.*
+*.key
+*.pem
+secrets/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+node_modules/

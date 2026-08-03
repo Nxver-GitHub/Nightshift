@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- macOS template. Edit paths/label, save to ~/Library/LaunchAgents/com.you.command-center.email-operator.plist,
+     then: launchctl load ~/Library/LaunchAgents/com.you.command-center.email-operator.plist
+     StartInterval fires every N seconds while logged in (1800 = 30 min). For fixed clock times,
+     replace StartInterval with a StartCalendarInterval dict. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.you.command-center.email-operator</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/ABS/PATH/command-center/scheduled-tasks/run-scheduled.sh</string>
+    <string>email-operator</string>
+  </array>
+  <key>StartInterval</key><integer>1800</integer>
+  <key>StandardOutPath</key><string>/ABS/PATH/launchd.out.log</string>
+  <key>StandardErrorPath</key><string>/ABS/PATH/launchd.err.log</string>
+</dict>
+</plist>

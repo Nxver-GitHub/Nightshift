@@ -2,6 +2,22 @@
 
 Append-only. Newest entries on top. Date format `YYYY-MM-DD`.
 
+## 2026-08-03 — the other six blocks (all built)
+- `crm` — local-first SQLite CRM (`crm.py`): companies/contacts/projects/interactions/events, with
+  the embedded rules (nothing sleeps → open project needs a dated next action; disqualify needs a
+  reason; every mutation logs an event). Tested.
+- `prospection` — `prospection.py`: 3–4 step email sequences on the same DB, with a hard validation
+  gate (nothing sendable until the owner approves) + the outbound role skill. Tested.
+- `email-operator` — role skill (connector-agnostic) + `state.py` (already-handled tracker) +
+  `run-operator.sh`. Triages the inbox, drafts, delegates multi-step to the taskrunner, never sends. Tested.
+- `content-agents` — per-network content role skill (never publishes; owner posts, returns the URL) +
+  `content.py` pipeline (idea→draft→ready→posted + stats). Tested.
+- `dashboard` — minimal read-only local view (`server.py` stdlib HTTP + self-contained `index.html`)
+  over tasks.json + crm.db + the brain. No build step. Tested (API + page serve).
+- `scheduled-tasks` — `run-scheduled.sh` (review-mode headless pass of any skill) + cron/launchd/systemd
+  templates. The periodic complement to the taskrunner's persistent loop.
+- All generalized, config-driven, no secrets; full leak audit across `blocks/` = 0 matches. Catalog: all built.
+
 ## 2026-08-03 — taskrunner runtime + operate runbook
 - Added the "trigger" layer so the block runs like the source system: `code/start-taskrunner.sh`
   (persistent `claude --remote-control … "/loop /taskrunner"` session + auto-relaunch + `.taskrunner.on`

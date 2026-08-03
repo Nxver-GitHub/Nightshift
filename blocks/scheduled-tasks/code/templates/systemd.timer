@@ -1,0 +1,12 @@
+# Linux template. Save as ~/.config/systemd/user/command-center-email-operator.timer (edit schedule).
+# Enable: systemctl --user enable --now command-center-email-operator.timer
+[Unit]
+Description=Run the email-operator on a schedule
+
+[Timer]
+# Every 30 minutes. For working-hours only, use e.g. OnCalendar=Mon..Fri 9..21:00/30
+OnCalendar=*:0/30
+Persistent=true
+
+[Install]
+WantedBy=timers.target

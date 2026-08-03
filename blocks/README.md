@@ -20,13 +20,13 @@ That's the model: Sunday ships the parts; your agent assembles the machine for y
 ## The catalog
 | Block | What it gives you | Status |
 |---|---|---|
-| `dashboard` | The Command Center web UI — a chat + widgets over your brain | planned |
+| `dashboard` | A read-only local view over your brain, kanban, and CRM (minimal, no build step) | **built** |
 | `taskrunner` | A kanban the agents work through, self-paced, only closed when verified done | **built** |
-| `email-operator` | Inbox triage → drafts + queued tasks; never sends without your yes | planned |
-| `crm` | Companies / contacts / projects / interactions, each with a dated next action | planned |
-| `prospection` | Outbound engine on top of the CRM ("nothing sleeps") | planned |
-| `content-agents` | One persistent agent per network (LinkedIn / X / shorts / blog) | planned |
-| `scheduled-tasks` | Cron-style automation, review-mode first, promoted to auto once proven | planned |
+| `email-operator` | Inbox triage → drafts + queued tasks; never sends without your yes | **built** |
+| `crm` | Companies / contacts / projects / interactions, each with a dated next action | **built** |
+| `prospection` | Outbound engine on top of the CRM ("nothing sleeps") | **built** |
+| `content-agents` | One persistent agent per network (LinkedIn / X / shorts / blog) | **built** |
+| `scheduled-tasks` | Cron-style automation, review-mode first, promoted to auto once proven | **built** |
 
 *(Status is `planned` until a block is generalized and dropped in. Blocks are built one at a time,
 each proven before the next.)*

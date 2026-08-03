@@ -1,0 +1,8 @@
+# cron template (macOS / Linux). Edit the paths, then run `crontab -e` and paste a line.
+# The machine must be awake for cron to fire (a closed laptop skips runs).
+
+# Email operator: every 30 min, 09:00–21:00, Mon–Fri.
+*/30 9-21 * * 1-5  /ABS/PATH/command-center/scheduled-tasks/run-scheduled.sh email-operator >> /ABS/PATH/cron.log 2>&1
+
+# Prospection daily batch: once a day at 10:00 (it only surfaces owner-approved steps).
+0 10 * * 1-5  /ABS/PATH/command-center/scheduled-tasks/run-scheduled.sh prospection "Send today's approved batch only." >> /ABS/PATH/cron.log 2>&1

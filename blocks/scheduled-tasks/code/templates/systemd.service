@@ -1,0 +1,8 @@
+# Linux template. Save as ~/.config/systemd/user/command-center-email-operator.service (edit paths).
+# Pair with the .timer file. Enable: systemctl --user enable --now command-center-email-operator.timer
+[Unit]
+Description=Command Center scheduled run (email-operator)
+
+[Service]
+Type=oneshot
+ExecStart=/ABS/PATH/command-center/scheduled-tasks/run-scheduled.sh email-operator

@@ -12,6 +12,16 @@
 *.pem
 secrets/
 
+# Python cruft
+__pycache__/
+*.pyc
+
+# Runtime state that must never be committed (generated at the founder's install, not in the kit)
+*.db
+.taskrunner.on
+.taskrunner.lock
+*.log
+
 # OS / editor noise
 .DS_Store
 Thumbs.db

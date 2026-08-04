@@ -65,7 +65,7 @@ Append-only. Newest entries on top. Date format `YYYY-MM-DD`.
 - Added `blocks/README.md` (the catalog + consolidation flow), `blocks/_TEMPLATE/block.md` (block
   anatomy), and the `/sunday-assemble` command.
 - Documented two layers (brain, then blocks) in `README.md`; added Step 8 (assemble) to `START-HERE.md`.
-- Candidate blocks to generalize from Meridiem (all `planned`): dashboard, taskrunner, email-operator,
+- Candidate blocks to generalize from the source system (all `planned`): dashboard, taskrunner, email-operator,
   crm, prospection, content-agents, scheduled-tasks. Each ships generalized — no secrets, no hardcoded
   wiring. Repo is private.
 

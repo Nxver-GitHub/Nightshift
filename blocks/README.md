@@ -8,6 +8,10 @@ Center — private, yours, wired to your tools.
 
 That's the model: Sunday ships the parts; your agent assembles the machine for you.
 
+**Connecting apps (email, etc.)?** See [`connectors.md`](connectors.md). The kit stays
+connector-agnostic; we **recommend Composio** as the easiest default. Most blocks need no connector
+at all — only `email-operator`, the send step of `prospection`, and `content-agents` reach outside.
+
 ## How consolidation works
 1. Your brain exists (the founding interview is done).
 2. You run `/sunday-assemble` (or just say "build my command center").

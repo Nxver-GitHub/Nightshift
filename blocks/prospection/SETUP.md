@@ -11,9 +11,10 @@
 
 ## Operate
 - One session per prospecting push, or a daily task on the `taskrunner`: run the loop in `skill/prospection.md`.
-- Daily send: `python3 prospection.py due-today` → send each approved step via your email path →
-  `mark-sent`. **Only approved steps ever appear here** — the owner approves with
-  `python3 prospection.py approve --sequence <id>`.
+- Daily send: `python3 prospection.py due-today` → send each approved step via your email path
+  (the `email-operator` block, or an email connector — **we recommend Composio**, see
+  `blocks/connectors.md`) → `mark-sent`. **Only approved steps ever appear here** — the owner
+  approves with `python3 prospection.py approve --sequence <id>`.
 - A reply: `python3 prospection.py reply-received --contact <id>`, then log it in the CRM.
 
 ## Build your script library

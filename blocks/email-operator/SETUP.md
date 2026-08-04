@@ -5,8 +5,10 @@
 ## Install
 1. Install `taskrunner` first (multi-step work is delegated to it). Note its path for `$TR`.
 2. Copy `code/` into `command-center/email-operator/`.
-3. Connect the founder's email tool (an email MCP or CLI). The skill uses whatever is available —
-   there's no hardcoded provider. Confirm the agent can list today's messages and create a draft.
+3. Connect the founder's email tool. **Recommended: Composio** (`blocks/connectors.md`) — it handles
+   the OAuth and exposes email tools to the agent; a native MCP or CLI works too. The skill uses
+   whatever is available — no hardcoded provider. Confirm the agent can list today's messages and
+   create a draft.
 4. Install the skill: `mkdir -p ~/.claude/skills/email-operator && cp blocks/email-operator/skill/email-operator.md ~/.claude/skills/email-operator/SKILL.md`,
    then set `$STATE` (state.py) and `$TR` (taskrunner) inside it.
 5. Configure: `OPERATOR_STATE` (default `state.json` next to the script), `OPERATOR_MODEL`.

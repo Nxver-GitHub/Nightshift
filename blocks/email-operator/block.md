@@ -11,9 +11,9 @@ email tool the founder has connected — an email MCP, a CLI — the skill is ab
 a provider.
 
 ## What it needs
-- **Tools / accounts**: Python 3, an email tool the founder has connected, and the `taskrunner` block
-  (for multi-step delegation). Reads the brain (for `people.md` identity checks) and the `crm` block
-  if present.
+- **Tools / accounts**: Python 3, an email tool the founder has connected (**we recommend Composio** —
+  see `blocks/connectors.md`; a native MCP or CLI works too), and the `taskrunner` block (for
+  multi-step delegation). Reads the brain (for `people.md` identity checks) and the `crm` block if present.
 - **Config the agent must fill**: `OPERATOR_STATE` (state.json path), `OPERATOR_MODEL` (default
   `claude-opus-5`). Point `$TR` at the taskrunner install.
 - **Depends on blocks**: `taskrunner`. Pairs with `crm`, `scheduled-tasks` (to run it every N min).

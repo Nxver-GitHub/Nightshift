@@ -2,6 +2,14 @@
 
 Append-only. Newest entries on top. Date format `YYYY-MM-DD`.
 
+## 2026-08-03 — connectors guidance (agnostic, Composio recommended)
+- Added `blocks/connectors.md`: what actually needs a connector (only email-operator, prospection's
+  send step, and content-agents — everything else is local), and the recommendation. Kit stays
+  connector-agnostic; **Composio** is the recommended default (handles OAuth, most apps, least wiring),
+  with native MCP / CLI as equally valid alternatives.
+- Pointed to it from `blocks/README.md`, `email-operator` (block.md + SETUP), and `prospection` SETUP.
+- No secret ever in git — credentials live in the connector's own store.
+
 ## 2026-08-03 — three more blocks: goals, health, sessions
 - `goals` — `goal.py`/`goals.json` + the goal-agent role: carries one background objective (calibrate
   → measurable plan → create dated tasks for the taskrunner → wake on cadence to measure/adjust), with

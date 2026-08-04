@@ -69,6 +69,7 @@ def main():
     ap.add_argument("--email-date", default="")
     ap.add_argument("--contract", action="store_true",
                     help="force-append the execution contract (automatic when --email-* is set)")
+    ap.add_argument("--goal", default="", help="parent goal id (from the goals block), if any")
     ap.add_argument("--tasks", default=None, help="target kanban (default: see --tasks in the header)")
     a = ap.parse_args()
 
@@ -125,9 +126,11 @@ def main():
             "claimed_by": None,
             "delegate_session_id": None,
             "email": email or None,
+            "goal": a.goal.strip() or None,
             "finalization": None,
             "journal": [f"{now()} — created by {a.source}"
-                        + (f" (email from {email.get('from')})" if email else "")],
+                        + (f" (email from {email.get('from')})" if email else "")
+                        + (f" (goal {a.goal.strip()})" if a.goal.strip() else "")],
             "created_at": now(),
             "started_at": None,
             "done_at": None,

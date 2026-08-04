@@ -27,6 +27,9 @@ That's the model: Sunday ships the parts; your agent assembles the machine for y
 | `prospection` | Outbound engine on top of the CRM ("nothing sleeps") | **built** |
 | `content-agents` | One persistent agent per network (LinkedIn / X / shorts / blog) | **built** |
 | `scheduled-tasks` | Cron-style automation, review-mode first, promoted to auto once proven | **built** |
+| `goals` | An agent that carries one background objective — plans it, delegates, measures, adjusts | **built** |
+| `health` | Self-monitoring: constate the system, file a ticket when a signal goes red | **built** |
+| `sessions` | Keep persistent agents sharp: count runs, reset cleanly, find a project's session | **built** |
 
 *(Status is `planned` until a block is generalized and dropped in. Blocks are built one at a time,
 each proven before the next.)*

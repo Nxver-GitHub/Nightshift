@@ -1,0 +1,5 @@
+{
+  "agents": {
+    "taskrunner": { "session": "Taskrunner", "max_runs": 4, "max_hours": 24 }
+  }
+}

@@ -2,6 +2,17 @@
 
 Append-only. Newest entries on top. Date format `YYYY-MM-DD`.
 
+## 2026-08-03 — three more blocks: goals, health, sessions
+- `goals` — `goal.py`/`goals.json` + the goal-agent role: carries one background objective (calibrate
+  → measurable plan → create dated tasks for the taskrunner → wake on cadence to measure/adjust), with
+  the autonomy contract and two escalation levels. Tested. Added `--goal` to the taskrunner's
+  `add_task.py` so goal-owned tasks link back.
+- `health` — `healthcheck.py` (constate the Command Center; unknown-not-red discipline; always exit 0;
+  files a taskrunner ticket on red) + `health-log.py` (tests/improvements/incidents journal). Tested.
+- `sessions` — `session-cycle.py` (count runs per persistent agent, reset cleanly so the launcher
+  relaunches fresh) + `list-sessions.py` (find a project's attributed Claude Code session). Tested.
+- All generalized, config-driven, no secrets. Catalog: 10/10 built.
+
 ## 2026-08-03 — the other six blocks (all built)
 - `crm` — local-first SQLite CRM (`crm.py`): companies/contacts/projects/interactions/events, with
   the embedded rules (nothing sleeps → open project needs a dated next action; disqualify needs a

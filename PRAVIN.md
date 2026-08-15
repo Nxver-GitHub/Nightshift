@@ -40,6 +40,10 @@ Add a **decision-ledger panel**:
    expensed it.
 3. This is where your UI/UX judgment matters: judges (YC CTOs, a Citadel quant, an xAI MTS)
    must *read* this in seconds. Design for skimmability, not decoration.
+4. **Required one-liner while you're in `server.py`:** the bind address `127.0.0.1` must become
+   `os.environ.get("DASH_BIND", "127.0.0.1")`. The dashboard also runs inside a Superserve VM
+   behind a public preview URL (Surya's US-1.4), and the preview router can't reach a
+   loopback-only listener. Default stays loopback, so laptop behavior is unchanged.
 
 **Constraints:** no build step, no npm, no frameworks, no pip installs — static HTML + stdlib
 Python only (repo-wide rule). Dashboard stays read-only. Playwright test proving the panel

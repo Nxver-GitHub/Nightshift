@@ -39,3 +39,7 @@ graphify-out/manifest.json
 graphify-out/cost.json
 graphify-out/.graphify_*
 .playwright-mcp/
+
+# Superserve runtime block: sandbox credentials + pulled VM state (never committed)
+blocks/runtime/code/.superserve-state.json
+blocks/runtime/code/mirror/

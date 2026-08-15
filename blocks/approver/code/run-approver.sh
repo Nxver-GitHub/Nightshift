@@ -37,8 +37,11 @@ echo "=== run $(date '+%Y-%m-%d %H:%M') — approver ===" >> "$LOG"
 # fixed cron line may pass arguments — never route third-party text (emails, form input) in here.
 claude -p "Load and follow the approver skill for ONE pass over the pending owner questions. Config for THIS pass — pass paths as FLAGS, never as env prefixes (commands must start with python3 for the permission rule to match): list with python3 '$DIR/approve.py' pending --tasks '$TASKS' --json ; decide with python3 '$DIR/approve.py' answer --tasks '$TASKS' --ledger '$LEDGER' --id ... --verdict ... --reason ... --policy-ref ... ; escalate with python3 '$DIR/approve.py' escalate --tasks '$TASKS' --ledger '$LEDGER' --id ... --reason ... — the policy file to read first is '$POLICY'. Approve or reject only where a clause clearly applies, and escalate everything else. You answer questions only — never execute an approved action yourself. $*" \
   --model "$MODEL" \
-  --allowedTools "Bash(python3 *)" >> "$LOG" 2>&1
-# Scoped permission, not --dangerously-skip-permissions: the headless approver may run python3
-# (approve.py needs it) and nothing else beyond the default read tools. A dry run proved the
-# default permission set denies python3 entirely, stranding correct verdicts unexecuted.
+  --allowedTools "Bash(python3 $DIR/approve.py *)" "Bash(python3 '$DIR/approve.py' *)" \
+  >> "$LOG" 2>&1
+# Scoped to approve.py itself, not to the python3 interpreter (tightened after security review:
+# "Bash(python3 *)" also matched `python3 -c ...`, i.e. arbitrary code one prompt-injected
+# question away). Never --dangerously-skip-permissions. Both quoting variants are allowed
+# because a pattern miss doesn't fail safe — it strands correct verdicts (the ba52a08 lesson).
+# MUST be re-verified with a live headless pass before it next matters (14:00 spine re-run).
 echo "=== end $(date '+%H:%M') ===" >> "$LOG"

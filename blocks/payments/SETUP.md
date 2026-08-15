@@ -135,7 +135,32 @@ instead of being converted from a UNIX epoch.
 > checkout configuration, and that it exposes `checkout_configuration_id`. If either is wrong,
 > `pay.py sales` returns **empty** for Whop — money lands and the seam never sees it. The mocked
 > tests cannot catch this, because their fixtures assert the same assumption the driver makes.
-> Before trusting this rail: create one link, buy it, and dump the raw `GET /payments` body.
+
+`tests/verify_whop_live.py` settles it. It is not a pytest module (pytest would collect it, and it
+pauses for a human purchase mid-flow) — it is a three-verb script you run by hand:
+
+```bash
+export WHOP_API_KEY=...  WHOP_COMPANY_ID=biz_...
+
+python3 blocks/payments/tests/verify_whop_live.py probe --amount 1 --yes   # real listing, real charge
+#   ...buy it in a browser, then:
+python3 blocks/payments/tests/verify_whop_live.py check --link-id ch_...
+
+python3 blocks/payments/tests/verify_whop_live.py raw                      # unfiltered GET /payments
+```
+
+`check` rules on six assumptions and names the `pay.py` symbol each one governs, so a FAIL points
+straight at the line to fix: the `managed_by` tag propagating onto the payment, the
+`checkout_configuration_id` join key, whether `checkout_configuration_ids[]` really filters
+server-side, the `status == "paid"` enum, the `total`/`paid_at` fields `sales` prints, and the
+`page_info` pagination shape. It exits 1 if any fail. It finds our payment *without* assuming the
+field name it is testing — if the id lives under some other key, it reports which one.
+
+Two cautions. **Whop has no test mode.** There is no `sk_test_` equivalent to inspect, so unlike
+`test_pay_live.py` this script cannot prove it is safe — `probe` therefore refuses to run without
+`--yes` and a purchase is a real charge. Keep the amount at the floor. And raw payment objects
+carry buyer names and emails, so dumps land in `tests/whop-live-dumps/`, which is gitignored;
+put the verdicts in a commit message, never the payloads.
 
 ### Completing the Dodo driver
 

@@ -48,6 +48,10 @@ graphify-out/.graphify_*
 blocks/runtime/code/.superserve-state.json
 blocks/runtime/code/mirror/
 
+# Raw Whop API bodies saved by tests/verify_whop_live.py — real payment objects carry buyer
+# names and emails. The verdicts go in the commit message; the payloads stay on the operator's disk.
+blocks/payments/tests/whop-live-dumps/
+
 # runtime lock files (fcntl coordination, never content)
 *.jsonl.lock
 blocks/taskrunner/code/tasks.json.lock

@@ -1,3 +1,31 @@
 {
-  "tasks": []
+  "tasks": [
+    {
+      "id": "t-20260815-121325",
+      "title": "Evaluate listing the Policy Gate Kit on Whop (second marketplace)",
+      "description": "Whop listing would be a second live shelf for the kit. Their marketplace operates under platform terms including a revenue share on each sale. Decide whether Nightshift may enter this distribution arrangement.",
+      "project": "nightshift",
+      "due": "",
+      "priority": "normal",
+      "status": "waiting_owner",
+      "claimed_by": null,
+      "delegate_session_id": null,
+      "email": null,
+      "goal": null,
+      "finalization": null,
+      "journal": [
+        "2026-08-15 12:13 — created by agent",
+        "2026-08-15 12:13 — question asked: May Nightshift list the Policy Gate Kit on Whop's marketplace under Whop's standard terms, which take a percentage revenue share on each sale? This is a new distribution agreement with a third-party platform, not a routine sale."
+      ],
+      "created_at": "2026-08-15 12:13",
+      "started_at": null,
+      "done_at": null,
+      "question": {
+        "text": "May Nightshift list the Policy Gate Kit on Whop's marketplace under Whop's standard terms, which take a percentage revenue share on each sale? This is a new distribution agreement with a third-party platform, not a routine sale.",
+        "asked_at": "2026-08-15 12:13",
+        "answer": null,
+        "answered_at": null
+      }
+    }
+  ]
 }

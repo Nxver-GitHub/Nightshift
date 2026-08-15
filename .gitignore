@@ -43,3 +43,7 @@ graphify-out/.graphify_*
 # Superserve runtime block: sandbox credentials + pulled VM state (never committed)
 blocks/runtime/code/.superserve-state.json
 blocks/runtime/code/mirror/
+
+# runtime lock files (fcntl coordination, never content)
+*.jsonl.lock
+blocks/taskrunner/code/tasks.json.lock

@@ -491,6 +491,10 @@ def test_terac_submit_documented_sequence_and_shape(monkeypatch, kanban, ledger,
     assert {q["key"] for q in body["screening_questions"]} == {"verdict", "reasoning"}
     verdict_q = next(q for q in body["screening_questions"] if q["key"] == "verdict")
     assert [a["text"] for a in verdict_q["answers"]] == ["Approve", "Reject"]
+    reasoning_q = next(q for q in body["screening_questions"] if q["key"] == "reasoning")
+    assert len(reasoning_q["answers"]) >= 2          # their validator's minimum (live 400, 8/15)
+    assert reasoning_q["answers"][0]["allow_free_text"] is True
+    assert reasoning_q["answers"][1]["qualify_logic"] == "reject"   # no reasoning, no qualify
     assert body["expected_days_to_complete"] >= 5         # API minimum
     # The question the taskrunner asked reaches the expert verbatim.
     assert "May I sign a 3-month retainer with this agency?" in body["description"]
@@ -532,7 +536,7 @@ def test_terac_collect_writes_the_answer_and_releases_the_payout(
             "id": "s_1", "status": "awaiting_review",
             "screening_answers": [
                 {"key": "verdict", "answer": ["Approve"]},
-                {"key": "reasoning", "answer": ["My reasoning",
+                {"key": "reasoning", "answer": ["I will explain my reasoning here",
                                                 "A 3-month retainer is standard for this scope."]},
             ]}]},
         ("POST", "/submissions/s_1/approve"): {},

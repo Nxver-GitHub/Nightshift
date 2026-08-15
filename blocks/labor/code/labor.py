@@ -64,6 +64,11 @@ TERAC_HTTP_TIMEOUT = 30
 # screening questions below; the task is "read the context, then answer" — so the URL just has
 # to be real and public. Overridable for a richer context page (e.g. the live dashboard).
 TERAC_TASK_URL_DEFAULT = "https://github.com/Nxver-GitHub/Nightshift"
+# Screener option labels, shared by submit (sends them) and collect (filters them back out of the
+# free-text answer). Their validator requires >=2 answers per question (live 400, 8/15) — so the
+# second option REJECTS, which conveniently guarantees every qualifying expert typed reasoning.
+TERAC_REASONING_OPT = "I will explain my reasoning here"
+TERAC_REASONING_DECLINE = "I decline to give reasoning"
 
 
 class LaborError(Exception):
@@ -391,8 +396,9 @@ def terac_submit(task_id: str, question: str, context: str, cost: float) -> dict
             {"key": "reasoning",
              "text": "In one paragraph: why? (This goes into the company's audit ledger verbatim.)",
              "pick": "one",
-             "answers": [{"text": "My reasoning", "qualify_logic": "may",
-                          "allow_free_text": True}]},
+             "answers": [{"text": TERAC_REASONING_OPT, "qualify_logic": "must_one_of",
+                          "allow_free_text": True},
+                         {"text": TERAC_REASONING_DECLINE, "qualify_logic": "reject"}]},
         ],
     })
     oid = draft.get("id")
@@ -453,8 +459,9 @@ def terac_collect(task_id: str, answer: Optional[str], cost: float) -> Tuple[str
     verdict_raw = next((v for v in answers.get("verdict", []) if str(v).strip()), "")
     verdict = str(verdict_raw).strip().lower()
     # Free-text screeners echo the option label alongside the typed text; keep only the words.
+    labels = {TERAC_REASONING_OPT.lower(), TERAC_REASONING_DECLINE.lower()}
     reasoning = " ".join(str(v).strip() for v in answers.get("reasoning", [])
-                         if str(v).strip() and str(v).strip().lower() != "my reasoning").strip()
+                         if str(v).strip() and str(v).strip().lower() not in labels).strip()
     if verdict not in VERDICTS:
         raise LaborError(
             f"submission {sub.get('id')} carries no readable verdict (got '{verdict_raw}') — "

@@ -6,7 +6,7 @@ no wiring to anyone else's accounts, no secrets. Your Claude Code agent reads th
 pick what you want, and the agent **consolidates** the chosen blocks into your **own** Command
 Center — private, yours, wired to your tools.
 
-That's the model: Sunday ships the parts; your agent assembles the machine for you.
+That's the model: Nightshift ships the parts; your agent assembles the machine for you.
 
 **Connecting apps (email, etc.)?** See [`connectors.md`](connectors.md). The kit stays
 connector-agnostic; we **recommend Composio** as the easiest default. Most blocks need no connector

@@ -2,7 +2,7 @@
 
 **A kit that lets an AI agent build your company's "brain" — by interviewing you, not by making you fill in templates.**
 
-<sub>Forked from **[Project Sunday](https://github.com/MaxSch1/Project-Sunday)** by [Meridiem](https://meridiem.be/en), created by Maxime Schifflers.</sub>
+<sub>Built for the Terac Zero-Human Company Hackathon by **Surya, Anirudh, and Pravin** · forked from **[Project Sunday](https://github.com/MaxSch1/Project-Sunday)** by [Meridiem](https://meridiem.be/en), created by Maxime Schifflers.</sub>
 
 
 Nightshift is a small, self-contained repository. You clone it, open it in
@@ -19,13 +19,13 @@ up your own in an afternoon.
 ## Who it's for
 
 - **Founders creating a new company.** This is the sweet spot. There's no legacy mess to clean up
-  — Sunday gives your business a spine from day one.
+  — Nightshift gives your business a spine from day one.
 - **Anyone who wants a real "second brain" for a project or a solo venture.** *(Personal mode is
   coming; today the kit is tuned for creating a company.)*
 
 ## What you get
 
-Running Sunday produces a folder like this (names adapt to your business):
+Running Nightshift produces a folder like this (names adapt to your business):
 
 ```
 your-company-brain/
@@ -43,7 +43,7 @@ dated `logs/`, topic `notes/`, and a `people.md` you read *before* you write to 
 
 ## Two layers: brain, then blocks
 
-Sunday installs in two layers:
+Nightshift installs in two layers:
 
 1. **The brain** — memory and rules, built by the founding interview. Every business starts here.
 2. **The blocks** — the working machinery: a dashboard, agents (inbox triage, task-runner,
@@ -57,7 +57,7 @@ Stop after the brain and add blocks later, or build the whole Command Center in 
 1. Install [Claude Code](https://claude.com/claude-code).
 2. Clone this repo and open it:
    ```bash
-   git clone <this-repo-url> project-sunday && cd project-sunday
+   git clone <this-repo-url> nightshift && cd nightshift
    claude
    ```
 3. Type `go` (or `/sunday`) and answer the questions. The agent writes your brain into a **new,
@@ -65,7 +65,7 @@ Stop after the brain and add blocks later, or build the whole Command Center in 
 
 ## What this repo does *not* contain
 
-No real company data. Sunday ships the **method and the structure** — the rules, the templates,
+No real company data. Nightshift ships the **method and the structure** — the rules, the templates,
 the interview. Everything specific is generated live, from your answers, into your own folder.
 The only company here is the fictional one in [`examples/`](examples/), to show you what "done"
 looks like.

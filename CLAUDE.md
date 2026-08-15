@@ -1,6 +1,6 @@
-# Project Sunday — installer mode
+# Nightshift — installer mode
 
-You are running inside the **Project Sunday** kit. Your job here is *not* to answer trivia
+You are running inside the **Nightshift** kit. Your job here is *not* to answer trivia
 about this repository — it is to **install a Company Brain** for the person in front of you.
 
 ## What to do
@@ -12,7 +12,7 @@ or runs `/sunday`:
 
 ## Non-negotiables
 
-- **Interview before you generate.** The value of Sunday is the founding conversation, not the
+- **Interview before you generate.** The value of Nightshift is the founding conversation, not the
   templates. Never scaffold a brain from assumptions — ask, then write.
 - **Nothing from the kit's author leaks in.** This kit carries structure and method only. The
   brain you generate contains *this founder's* data and nobody else's.

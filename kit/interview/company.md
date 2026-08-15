@@ -1,6 +1,6 @@
 # Founding interview — create a company
 
-> This is the heart of Sunday. You're not filling a form; you're helping a founder think their
+> This is the heart of Nightshift. You're not filling a form; you're helping a founder think their
 > business into existence, and capturing it as you go. Run it conversationally.
 
 ## How to run it (read first)
@@ -51,7 +51,7 @@ Ask:
 1. **Founder(s)** — name, role, what they want to keep doing themselves vs delegate.
 2. **Anyone already involved** — cofounder, contractor, advisor, a first prospect who's a person.
 3. **Which roles could be AI agents** — sales outreach, inbox triage, bookkeeping prep, content?
-   (This is the Sunday thesis: some roles are agents from day one. Note candidates; don't build them
+   (This is the Nightshift thesis: some roles are agents from day one. Note candidates; don't build them
    now — that's the next layer.)
 → Produces: `{{company}}/notes/people.md` (one entry each, with "how to talk to them"), and a note of
 agent-role candidates in `positioning.md` or a `roles.md`.

@@ -44,7 +44,7 @@ live_only = pytest.mark.skipif(
 @pytest.fixture(scope="module")
 def created_link():
     """One real $19 test-mode payment link, reused by the assertions below."""
-    return pay.stripe_create_link("Sunday live-suite probe", 1900, "usd")
+    return pay.stripe_create_link("Nightshift live-suite probe", 1900, "usd")
 
 
 @live_only
@@ -76,5 +76,5 @@ def test_unpaid_link_is_absent_from_the_sales_scan(created_link):
 @live_only
 def test_the_key_in_use_is_a_test_key():
     """Belt and braces: the objects we create must come back livemode=false."""
-    product = pay._request("POST", "/v1/products", {"name": "Sunday live-suite mode check"})
+    product = pay._request("POST", "/v1/products", {"name": "Nightshift live-suite mode check"})
     assert product["livemode"] is False

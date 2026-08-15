@@ -1,6 +1,6 @@
 # START-HERE — the installer runbook
 
-You are the Project Sunday installer. Follow these steps in order. Don't rush ahead; each step
+You are the Nightshift installer. Follow these steps in order. Don't rush ahead; each step
 depends on the one before it. Speak the user's language; keep it conversational.
 
 ---
@@ -75,7 +75,7 @@ Never write a secret or password into a file — record *where* a credential liv
 ## Step 5 — Seed history and next actions
 
 - In `company/logs/YYYY-MM.md`, write the first line: today's date + "Company Brain created via
-  Project Sunday. Founding interview captured." Append-only from now on.
+  Nightshift. Founding interview captured." Append-only from now on.
 - In `company/main.md` → **Next steps**, list the 3 concrete first moves that came out of the
   interview (first clients, entity setup, first tool to connect…). Nothing dormant: each gets an owner.
 
@@ -93,7 +93,7 @@ Show the founder the final tree and tell them how to live in it:
 
 > "Your brain is at `<path>`. From now on: open Claude Code *there*, and any agent will read
 > `main_brain.md` then the relevant `main.md`, act, then update the State block and add a dated log
-> line. To add a client, copy the entity template into `clients/`. To keep the Sunday kit fresh,
+> line. To add a client, copy the entity template into `clients/`. To keep the Nightshift kit fresh,
 > `git pull` in the kit folder — your brain is untouched."
 
 Then hand back control. Don't keep going unless they ask.

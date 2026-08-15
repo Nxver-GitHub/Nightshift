@@ -80,7 +80,7 @@ file generation — it is the onboarding wizard of an agent-authority platform.
 
 ## The thesis (say this in one breath)
 
-Project Sunday is a kit that installs an agent-run company. Its architecture has one deliberate
+The base kit installs an agent-run company. Its architecture has one deliberate
 human dependency: **every block stops and asks the owner** — `waiting_owner`, `pending_validation`,
 review mode. That is the "owner's-yes safety floor."
 

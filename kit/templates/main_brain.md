@@ -18,7 +18,7 @@
 - `{{COMPANY_SLUG}}/` — the company: identity, offer, positioning, model, its projects.
 - `clients/` — one folder per client (same structure), created as clients arrive.
 - `misc/` — anything without an owner yet.
-- Rules: `CLAUDE.md` (routing + safety floor). Full method: this brain was built with Project Sunday.
+- Rules: `CLAUDE.md` (routing + safety floor). Full method: this brain was built with Nightshift.
 
 ## Where to go next
 - The company: `{{COMPANY_SLUG}}/main.md`

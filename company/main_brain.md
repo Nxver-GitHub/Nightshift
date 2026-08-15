@@ -41,7 +41,7 @@ operations to the agent roles. The company's standing owner is **the written pol
 - `nightshift/` — the company: identity, offer, positioning, model, the installed policy, its history.
 - `clients/` — one folder per client, created as real buyers become relationships. **None yet.**
 - `misc/` — anything without an owner yet. **Not created yet.**
-- Rules: `CLAUDE.md` (routing + safety floor). Full method: this brain was built with Project Sunday.
+- Rules: `CLAUDE.md` (routing + safety floor). Full method: this brain was built with the Nightshift kit.
 
 ## Where to go next
 - The company: `nightshift/main.md`

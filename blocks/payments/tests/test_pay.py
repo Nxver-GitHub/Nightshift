@@ -49,7 +49,7 @@ class Recorder:
 def session(sid, payment_status, amount_total=1900, created=1_700_000_000, currency="usd"):
     return {"id": sid, "object": "checkout.session", "payment_status": payment_status,
             "amount_total": amount_total, "currency": currency, "created": created,
-            "metadata": {"managed_by": "sunday-payments"}}
+            "metadata": {"managed_by": "nightshift-payments"}}
 
 
 def page(items):
@@ -114,7 +114,7 @@ def test_unknown_provider_exits_1(monkeypatch, capsys):
 # ── create-link ───────────────────────────────────────────────────────────────
 def test_create_link_issues_the_documented_call_sequence(monkeypatch, capsys):
     recorder = Recorder(create_link_responses())
-    run(monkeypatch, recorder, ["create-link", "--title", "Sunday Playbook",
+    run(monkeypatch, recorder, ["create-link", "--title", "Nightshift Playbook",
                                 "--amount", "19", "--currency", "USD"])
 
     # Product -> Price -> Payment Link, in that order (payment_links needs an existing Price ID).
@@ -125,8 +125,8 @@ def test_create_link_issues_the_documented_call_sequence(monkeypatch, capsys):
     ]
 
     product = recorder.params_for("POST", "/v1/products")
-    assert product["name"] == "Sunday Playbook"
-    assert product["metadata"]["managed_by"] == "sunday-payments"
+    assert product["name"] == "Nightshift Playbook"
+    assert product["metadata"]["managed_by"] == "nightshift-payments"
 
     price = recorder.params_for("POST", "/v1/prices")
     assert price["unit_amount"] == 1900             # dollars in, integer cents out
@@ -136,8 +136,8 @@ def test_create_link_issues_the_documented_call_sequence(monkeypatch, capsys):
 
     link = recorder.params_for("POST", "/v1/payment_links")
     assert link["line_items"] == [{"price": "price_TEST", "quantity": 1}]
-    assert link["metadata"]["managed_by"] == "sunday-payments"
-    assert link["metadata"]["title"] == "Sunday Playbook"
+    assert link["metadata"]["managed_by"] == "nightshift-payments"
+    assert link["metadata"]["title"] == "Nightshift Playbook"
 
     out = capsys.readouterr().out
     assert "https://buy.stripe.com/test_TEST" in out
@@ -234,14 +234,14 @@ def test_status_json_carries_the_detail(monkeypatch, capsys):
 # ── sales ─────────────────────────────────────────────────────────────────────
 def sales_recorder():
     ours = {"id": "plink_OURS", "object": "payment_link", "currency": "usd",
-            "metadata": {"managed_by": "sunday-payments", "title": "Sunday Playbook"}}
+            "metadata": {"managed_by": "nightshift-payments", "title": "Nightshift Playbook"}}
     theirs = {"id": "plink_THEIRS", "object": "payment_link", "currency": "usd", "metadata": {}}
 
     def sessions(params):
         if params.get("payment_link") == "plink_OURS":
             return page([session("cs_paid", "paid", amount_total=1900, created=1_700_000_000),
                          session("cs_open", "unpaid")])
-        raise AssertionError("sales must only scan links tagged managed_by=sunday-payments")
+        raise AssertionError("sales must only scan links tagged managed_by=nightshift-payments")
 
     return Recorder({
         ("GET", "/v1/payment_links"): page([ours, theirs]),
@@ -257,7 +257,7 @@ def test_sales_json_shape(monkeypatch, capsys):
     assert set(sale) == {"link_id", "session_id", "title", "amount_usd", "currency", "paid_at"}
     assert sale["link_id"] == "plink_OURS"
     assert sale["session_id"] == "cs_paid"
-    assert sale["title"] == "Sunday Playbook"
+    assert sale["title"] == "Nightshift Playbook"
     assert sale["amount_usd"] == 19.0
     assert sale["currency"] == "usd"
     assert sale["paid_at"].startswith("2023-11-14T")     # ISO-8601 UTC, sortable
@@ -316,12 +316,12 @@ def test_key_value_never_appears_in_an_error(monkeypatch, capsys):
 def test_flatten_uses_stripe_bracket_notation():
     pairs = dict(pay._flatten({
         "line_items": [{"price": "price_1", "quantity": 1}],
-        "metadata": {"managed_by": "sunday-payments"},
+        "metadata": {"managed_by": "nightshift-payments"},
         "skipped": None,
     }))
     assert pairs["line_items[0][price]"] == "price_1"
     assert pairs["line_items[0][quantity]"] == "1"
-    assert pairs["metadata[managed_by]"] == "sunday-payments"
+    assert pairs["metadata[managed_by]"] == "nightshift-payments"
     assert "skipped" not in pairs
 
 

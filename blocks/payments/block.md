@@ -9,7 +9,7 @@ at a terminal) says *"sell this, for this much"* and gets back a working hosted 
 command. Later — from a scheduled task, a storefront, or an agent mid-loop — the same tool answers
 the only two questions that matter afterwards: *did this link get paid?* and *what have we sold?*
 It keeps no database. The payment provider is the ledger, and everything this tool creates is
-tagged `metadata[managed_by]=sunday-payments` so it can find its own work through the API alone —
+tagged `metadata[managed_by]=nightshift-payments` so it can find its own work through the API alone —
 which means no drift between a local file and the account that actually holds the money. The rail
 itself is a driver behind one interface: Stripe today, a merchant-of-record tomorrow, by changing
 one environment variable rather than one line of business logic.

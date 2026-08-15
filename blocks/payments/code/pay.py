@@ -11,7 +11,7 @@ Three verbs, and only three, because a seam that grows verbs stops being a seam:
 Design notes (this file is read by other agents, so the WHY is written down):
 
 - **Stateless.** There is no local database. The provider is the ledger. Everything this tool
-  creates is tagged `metadata[managed_by]=sunday-payments`, so `sales` can find OUR links — and
+  creates is tagged `metadata[managed_by]=nightshift-payments`, so `sales` can find OUR links — and
   only ours — from the API alone. A local DB would be a second source of truth about money, and
   two sources of truth about money is how a company loses count.
 - **Dollars in, cents out.** `--amount` is in whole currency units (19, 19.50) because that is what
@@ -42,7 +42,7 @@ from decimal import Decimal, InvalidOperation
 
 # ── constants ─────────────────────────────────────────────────────────────────
 STRIPE_API_BASE = "https://api.stripe.com"
-MANAGED_BY = "sunday-payments"          # the tag that makes `sales` possible without a local DB
+MANAGED_BY = "nightshift-payments"      # the tag that makes `sales` possible without a local DB
 HTTP_TIMEOUT = 30                       # seconds; an agent loop must never hang on the money seam
 PAGE_LIMIT = 100                        # Stripe's max page size — fewer round trips per scan
 MAX_PAGES = 50                          # hard stop so a runaway account can't spin us forever

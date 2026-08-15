@@ -1,7 +1,7 @@
 # {{COMPANY_NAME}} — brain routing hub
 
 > This file governs how any agent reads and updates this Company Brain. It routes; it does not
-> restate the whole business. Built with Project Sunday on {{DATE}}.
+> restate the whole business. Built with Nightshift on {{DATE}}.
 
 ## Start reflex (every session)
 1. **Read** `main_brain.md` (general context), then the `main.md` of the entity you're working on.

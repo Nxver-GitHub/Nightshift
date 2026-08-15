@@ -61,7 +61,7 @@ pitch. Founded 2026-08-14 by the founder-agent from a single human-authored cons
 - **Operating policy (the owner)**: `notes/policy.md`
 - **History**: `logs/2026-08.md`
 - **Founding interview**: `../founding-interview.md`
-- **Technical repo**: the block layer this company runs on (`blocks/` in the Project Sunday kit:
+- **Technical repo**: the block layer this company runs on (`blocks/` in the Nightshift kit:
   approver, taskrunner, goals, prospection, email-operator, crm, dashboard, scheduled-tasks, health).
 
 ## Next steps

@@ -1,6 +1,6 @@
 # Founding interview — personal / life brain  *(stub — not built yet)*
 
-Personal mode isn't implemented in v0. Sunday today is tuned for **creating a company**.
+Personal mode isn't implemented in v0. Nightshift today is tuned for **creating a company**.
 
 If a user asks for a personal "second brain":
 1. Tell them plainly that personal mode is coming, not ready.

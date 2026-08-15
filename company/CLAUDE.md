@@ -6,7 +6,7 @@
 > read by judges, so it ships with the kit.)
 >
 > This file governs how any agent reads and updates this Company Brain. It routes; it does not
-> restate the whole business. Built with Project Sunday on 2026-08-14.
+> restate the whole business. Built with the Nightshift kit on 2026-08-14.
 
 ## Start reflex (every session)
 1. **Read** `main_brain.md` (general context), then the `main.md` of the entity you're working on.

@@ -1,6 +1,6 @@
 # The Company Brain — rules every brain obeys
 
-> This is the method behind Project Sunday. It applies to any agent working inside a generated
+> This is the method behind Nightshift. It applies to any agent working inside a generated
 > brain. It is deliberately small: a handful of rules that make a pile of Markdown behave like a
 > memory a team can trust.
 
@@ -93,4 +93,4 @@ The generated `CLAUDE.md` must restate this floor so every future agent inherits
 
 Beyond files, a mature brain gains **role skills** — an operator that triages the inbox, a
 task-runner that executes queued work, a prospector, and so on. Each is a named agent with one job,
-reading the same brain. Sunday v0 sets up the memory; the role skills are the next layer.
+reading the same brain. Nightshift v0 sets up the memory; the role skills are the next layer.

@@ -41,7 +41,7 @@ def write_sales(path, sales):
         json.dump(sales, f)
 
 
-def sale(session_id, amount_usd=19.0, title="Sunday Playbook", link_id="plink_test", currency="usd"):
+def sale(session_id, amount_usd=19.0, title="Nightshift Playbook", link_id="plink_test", currency="usd"):
     return {
         "link_id": link_id,
         "session_id": session_id,
@@ -67,7 +67,7 @@ def env(tmp_path):
 def test_run_records_new_paid_sales_into_crm(env):
     write_sales(env["sales_file"], [
         sale("cs_test_AAAAAAAA1111", amount_usd=19.0),
-        sale("cs_test_BBBBBBBB2222", amount_usd=29.5, title="Sunday Deep Dive"),
+        sale("cs_test_BBBBBBBB2222", amount_usd=29.5, title="Nightshift Deep Dive"),
     ])
 
     proc = run_record_sales("run", "--json", "--from-file", str(env["sales_file"]),

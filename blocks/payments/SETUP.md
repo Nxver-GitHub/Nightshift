@@ -46,7 +46,7 @@ fake objects, fake money, safe to repeat. Delete them from the dashboard later i
 ## 4. Create a link by hand
 
 ```bash
-python3 blocks/payments/code/pay.py create-link --title "Sunday Playbook" --amount 19 --currency usd
+python3 blocks/payments/code/pay.py create-link --title "Nightshift Playbook" --amount 19 --currency usd
 ```
 
 Prints the checkout URL and the link id (`plink_...`). Add `--json` if a script is reading it.
@@ -77,7 +77,7 @@ python3 blocks/payments/code/pay.py status --link-id plink_...
 # -> paid
 
 python3 blocks/payments/code/pay.py sales --json
-# -> [{"link_id": "plink_...", "session_id": "cs_test_...", "title": "Sunday Playbook",
+# -> [{"link_id": "plink_...", "session_id": "cs_test_...", "title": "Nightshift Playbook",
 #      "amount_usd": 19.0, "currency": "usd", "paid_at": "2026-..."}]
 ```
 

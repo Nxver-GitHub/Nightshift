@@ -1,6 +1,6 @@
 # Connectors — wiring blocks to your apps
 
-Sunday blocks are **connector-agnostic**: the kit imposes no specific integration. Where a block
+Nightshift blocks are **connector-agnostic**: the kit imposes no specific integration. Where a block
 needs an external app, it uses whatever tool you've connected. This page says what actually needs a
 connector, and what we recommend.
 

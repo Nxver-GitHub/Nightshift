@@ -1,6 +1,6 @@
-# Project Sunday — Zero-Human Company Release Plan (Terac Hackathon)
+# Nightshift — Zero-Human Company Release Plan (Terac Hackathon)
 
-> **Builds on:** Project Sunday v0 (brain + 10 built blocks, all tested)
+> **Builds on:** the base kit v0 (brain + 10 built blocks, all tested — provenance in README)
 > **Team:** 3 developers (Surya — autonomy lane · Anirudh — money lane · Pravin — evidence/audit lane, branch `pravin/audit`, brief in `PRAVIN.md`) | **Sprints:** 5, mapped to clock time (18h total)
 > **Submission: LOCKS 6:45pm — our upload target 6:30pm (Pravin owns the upload).** Guidebook deltas of 8/15 are folded in below; where this file and `HACKATHON.md` "Guidebook facts" disagree, the guidebook facts win.
 > **Hosting target:** Superserve (agent loop, persistent microVM) + Render (storefront + webhook receiver)
@@ -10,7 +10,7 @@
 
 ## The Thesis (the spine of every story below)
 
-Project Sunday's architecture has ONE deliberate human dependency: every block stops and asks
+The base kit's architecture has ONE deliberate human dependency: every block stops and asks
 the owner — `waiting_owner`, `pending_validation`, review mode. That is the "owner's-yes safety
 floor" (`README.md`, Design principles). A zero-human company cannot wake the owner. So **we do
 not remove the gates — we replace who stands behind them:**
@@ -169,7 +169,7 @@ When Surya starts the founder-agent session, an agent runs the founding intervie
 (`kit/interview/company.md` via `START-HERE.md`) with ANOTHER agent answering as the founder —
 constrained by the locked domain — and out comes a real Company Brain (`main_brain.md`,
 `company/main.md`, notes, `CLAUDE.md` routing) in a new folder, with US-0.2's policy installed as
-`company/notes/policy.md`. The last human dependency in Project Sunday — the interview — is gone.
+`company/notes/policy.md`. The last human dependency in the kit — the interview — is gone.
 - The founder-agent's answers must satisfy the interview's phases (identity, offer, positioning),
   and pick the company name, ICP, and one-liner itself.
 - The generated brain is committed (it contains no secrets — it's a synthetic company).
@@ -185,7 +185,7 @@ card flips `pay.py status --link-id …` to `paid`, and `pay.py sales --json` li
 whole money path is real and tested tonight, with zero sponsor dependence.
 - New block: `blocks/payments/` — `block.md` declares names `STRIPE_API_KEY`, `DODO_API_KEY`,
   `WHOP_API_KEY`, `PAYMENT_PROVIDER` (values never in git); `code/pay.py` (single CLI, provider
-  chosen by env — mirrors the `crm.py` idiom so it needs zero Project-Sunday knowledge to build);
+  chosen by env — mirrors the `crm.py` idiom so it needs zero prior repo knowledge to build);
   `SETUP.md` written for a stranger.
 - Provider adapters behind one interface: `stripe` (test mode, Payment Links API — fetch current
   Stripe docs first), `dodo` and `whop` as stubs that declare config and raise "credentials not
@@ -199,7 +199,7 @@ whole money path is real and tested tonight, with zero sponsor dependence.
 When a stranger opens the storefront URL on their phone, they see the product page (title, price,
 copy — placeholder tonight, agent-written tomorrow) and a Buy button that opens a `pay.py`-created
 checkout link; after paying (test card tonight) they land on a thank-you page with the delivery
-link. Self-contained: static HTML + tiny server, hosted on Render, no Project-Sunday internals.
+link. Self-contained: static HTML + tiny server, hosted on Render, no repo internals.
 - Product content read from one `product.json` (title, price, copy, delivery URL) — tomorrow the
   agent overwrites this file; Anirudh's surface doesn't change.
 - QR code on the thank-you/landing page for the in-room sales floor.
@@ -411,7 +411,7 @@ Linq docs first; consent/anti-spam clause in policy applies.
 ### US-4.1 — The Demo Itself **[BOTH]** *(2h)*
 When the judges watch the 3–4 minutes, they see the thesis, the live system, and the proof, in
 this order — rehearsed twice, timed, with every screen pre-loaded:
-1. **The hole** (30s): show `update_task.py --question` → `waiting_owner`. "Sunday's one deliberate
+1. **The hole** (30s): show `update_task.py --question` → `waiting_owner`. "The base kit's one deliberate
    human dependency. A zero-human company can't wake the owner."
 2. **The swap** (45s): approver answers at the same interface — diff view proving zero changes to
    existing blocks; the policy file on screen.
@@ -432,7 +432,7 @@ this order — rehearsed twice, timed, with every screen pre-loaded:
 
 ---
 
-## Delta Summary (what this plan adds to Project Sunday)
+## Delta Summary (what this plan adds to the base kit)
 
 | Addition | Sprint | Lane | Purpose |
 |---|---|---|---|
@@ -476,4 +476,4 @@ this order — rehearsed twice, timed, with every screen pre-loaded:
 - Sandboxo / Solari — **API surfaces unverified; explicitly not planned rather than invented**
 - SignalFire, 1517 Fund, Bagel Fund, SOLO, Interview Cake — not integrations (VC/community/education); never padded in
 - Multi-goal parallel autonomy; approver hierarchy (approver-of-approvers)
-- Personal mode of Project Sunday; upstreaming the approver block to the kit proper (post-hackathon PR)
+- Personal mode of the kit; upstreaming the approver block to the upstream kit (post-hackathon PR)

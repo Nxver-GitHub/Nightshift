@@ -26,6 +26,35 @@
         "answer": null,
         "answered_at": null
       }
+    },
+    {
+      "id": "t-20260815-124107",
+      "title": "A/B test the storefront tagline with a general-population Terac study",
+      "description": "Two candidate one-line pitches for the Policy Gate Kit. A 10-participant general-population study picks the more clickable line; the winner deploys to product.json under the pre-registered rule (n>=5, margin>=2, else keep incumbent). Tally 14:30.",
+      "project": "nightshift",
+      "due": "",
+      "priority": "normal",
+      "status": "done",
+      "claimed_by": null,
+      "delegate_session_id": null,
+      "email": null,
+      "goal": null,
+      "finalization": null,
+      "journal": [
+        "2026-08-15 12:41 — created by agent",
+        "2026-08-15 12:41 — question asked: May Nightshift spend up to $15 total on one general-population Terac study (10 participants, shrink ladder to 7 then 5 if priced over $15) to A/B-test the storefront tagline? This is a single outgoing spend serving the active make-the-first-sale goal. Today's approved outgoing spend so far is $13.50.",
+        "2026-08-15 12:41 — answered by approver agent (approve)",
+        "2026-08-15 12:44 — Spend approved (P2,P3) up to $15; Terac priced a compliant study at $67.50-150 — every ladder rung refused, drafts deleted, $0 spent. Study priced out by policy; incumbent tagline retained. Recorded in studies.jsonl."
+      ],
+      "created_at": "2026-08-15 12:41",
+      "started_at": null,
+      "done_at": "2026-08-15 12:44",
+      "question": {
+        "text": "May Nightshift spend up to $15 total on one general-population Terac study (10 participants, shrink ladder to 7 then 5 if priced over $15) to A/B-test the storefront tagline? This is a single outgoing spend serving the active make-the-first-sale goal. Today's approved outgoing spend so far is $13.50.",
+        "asked_at": "2026-08-15 12:41",
+        "answer": "APPROVED — Single spend is capped at $15, at the P2 ceiling, and serves the active first-sale goal; with $13.50 already spent today the $28.50 day total stays under the $50 P3 cap. [policy: P2, P3]",
+        "answered_at": "2026-08-15 12:41"
+      }
     }
   ]
 }

@@ -1,12 +1,9 @@
-# Project Sunday
+# Nightshift
 
 **A kit that lets an AI agent build your company's "brain" — by interviewing you, not by making you fill in templates.**
 
-<sub>**by [Meridiem](https://meridiem.be/en)** · created by Maxime Schifflers · repo: [github.com/MaxSch1/Project-Sunday](https://github.com/MaxSch1/Project-Sunday)</sub>
 
----
-
-Sunday is a small, self-contained repository. You clone it, open it in
+Nightshift is a small, self-contained repository. You clone it, open it in
 [Claude Code](https://claude.com/claude-code), and say `go`. From there an agent runs a
 **founding interview** with you and generates a structured *Company Brain*: a set of Markdown
 files that hold everything your business knows about itself — who you are, what you sell, who your

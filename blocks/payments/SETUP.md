@@ -105,26 +105,50 @@ The seam is these three commands and nothing else — treat the output as the co
 
 Errors always go to stderr with exit 1, and never contain a key or any part of one.
 
-## 7. Tomorrow: swapping the rail (US-1.1)
+## 7. Swapping the rail
 
-The provider is a driver behind one interface, so moving to a merchant of record is an env swap,
-not a rewrite:
+The provider is a driver behind one interface, so moving to another rail is an env swap, not a
+rewrite. `PAYMENT_PROVIDER` picks the driver; unset means `stripe`.
+
+| Provider | State | Config it reads |
+|---|---|---|
+| `stripe` | **live — the primary rail** | `STRIPE_API_KEY` |
+| `whop` | **live, not yet exercised against the real API** (US-3.1) | `WHOP_API_KEY`, `WHOP_COMPANY_ID` |
+| `dodo` | honest stub — exits 1 (US-1.1) | `DODO_API_KEY` |
+
+### Whop (US-3.1)
 
 ```bash
-export PAYMENT_PROVIDER=dodo     # or whop
-export DODO_API_KEY=...          # or WHOP_API_KEY=...
+export PAYMENT_PROVIDER=whop
+export WHOP_API_KEY=...          # company API key; never written to this repo
+export WHOP_COMPANY_ID=biz_...   # from the Whop dashboard URL; not a secret, still env-only
 ```
 
-Today those drivers are honest stubs — they exit 1 with:
+The three verbs behave identically to Stripe, with two shape differences worth knowing:
+`create-link` returns a `ch_…` id (a checkout configuration, created in one call with an inline
+one-time plan) rather than a `plink_…`, and `paid_at` comes back as Whop's own ISO-8601 string
+instead of being converted from a UNIX epoch.
+
+> **Not yet verified live.** The 38 mocked tests pass, but no Whop link has been created against
+> the real API from this repo. Two assumptions in `whop_list_sales` are unconfirmed and are the
+> ones that would break silently: that a payment carries the `metadata.managed_by` tag set on its
+> checkout configuration, and that it exposes `checkout_configuration_id`. If either is wrong,
+> `pay.py sales` returns **empty** for Whop — money lands and the seam never sees it. The mocked
+> tests cannot catch this, because their fixtures assert the same assumption the driver makes.
+> Before trusting this rail: create one link, buy it, and dump the raw `GET /payments` body.
+
+### Completing the Dodo driver
+
+Fill in the three functions in `DRIVERS["dodo"]` inside `code/pay.py` (`create_link`,
+`link_status`, `list_sales`) so they return the same shapes the Stripe driver returns, plus a
+`_dodo_request` transport alongside `_request` and `_whop_request` so the tests can monkeypatch one
+symbol and stay offline. Until then it exits 1 with:
 
 > `provider 'dodo' declared but credentials/implementation not provisioned yet — set PAYMENT_PROVIDER=stripe or complete this driver (US-1.1)`
 
-To complete one, fill in the three functions in `DRIVERS["dodo"]` inside `code/pay.py`
-(`create_link`, `link_status`, `list_sales`) so they return the same shapes the Stripe driver
-returns. **Fetch the current Dodo/Whop API docs first** — their surfaces are not verified anywhere
-in this repo, and coding a payment rail from memory is how a demo dies on stage. Nothing outside
-that dict should need to change; if it does, the seam has been broken and should be fixed rather
-than worked around.
+**Fetch the current Dodo API docs first** — that surface is not verified anywhere in this repo, and
+coding a payment rail from memory is how a demo dies on stage. Nothing outside that dict should
+need to change; if it does, the seam has been broken and should be fixed rather than worked around.
 
 ## 8. Recording sales into the CRM (US-1.2)
 

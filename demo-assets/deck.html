@@ -58,7 +58,7 @@
   .hint { position:fixed; bottom:1.1rem; left:1.4rem; color:var(--line); font-size:.75rem; }
   /* Print: redefine the tokens rather than patching individual rules. Every rule already reads
      from a var, so one block flips the whole deck to ink-on-paper. Patching rule by rule silently
-     misses anything with higher specificity — p.body beats .muted, and printed near-white on
+     misses anything with higher specificity: p.body beats .muted, and printed near-white on
      white. */
   @media print {
     :root { --bg:#fff; --ink:#111; --muted:#4a4a55; --line:#c9c9d2;
@@ -91,7 +91,7 @@
   <h2>Every agent loop stops<br>in the same place.</h2>
   <p class="body">It reaches something it can't undo: send the email, ship the deploy, charge the
   card. Then it waits for a human to type yes.</p>
-  <pre>$ update_task.py --id t-103 --question "Issue this invoice?"
+  <pre>$ update_task.py --question "List on Whop?"
   status: <span style="color:#f0b866">waiting_owner</span></pre>
   <p class="body muted">Five blocks, five names for the same gate. It isn't a bug. It's the safety
   floor. <b style="color:#f2f2f4">And a company with no owner can't answer it.</b></p>
@@ -126,13 +126,16 @@
   <div class="kicker">When policy can't decide</div>
   <h2>The company hires a human.<br>And expenses it.</h2>
   <div class="dec"><span class="v esc">escalated</span>
-    <span>"A buyer asks for an invoice addressed to their employer. Issue it?"</span>
-    <span class="who">agent · 12:41</span></div>
-  <div class="dec human"><span class="v app">approve</span>
-    <span>"A buyer asks for an invoice addressed to their employer. Issue it?"</span>
-    <span class="who h">hired human · terac · $8.00</span></div>
-  <p class="body" style="margin-top:1.6rem">No clause covered it, so the policy refused to guess.
-  Twenty minutes later a verified human answered, paid automatically and recorded as a cost.</p>
+    <span>"May Nightshift list the Policy Gate Kit on Whop's marketplace, under terms that take a
+    revenue share on each sale?"</span>
+    <span class="who">agent · P9</span></div>
+  <div class="dec human"><span class="v app">hired</span>
+    <span>Posted to Terac. Authorized $14.00 against the policy's own $15 ceiling; Terac priced it
+    at $13.50.</span>
+    <span class="who h">terac · <span class="fill">[verdict]</span></span></div>
+  <p class="body" style="margin-top:1.6rem">Pricing and selling are covered by the policy. A
+  revenue-share distribution agreement with a third party is not, and P9 forbids stretching a
+  clause by analogy. So it refused to guess and bought the judgment instead.</p>
   <p class="big" style="margin-top:1.4rem">No employees. No owner in the loop.<br>When it needs a
   human, it <span style="color:var(--accent)">buys</span> one.</p>
 </section>
@@ -143,9 +146,9 @@
   <h2>Nobody touched a keyboard<br>except to start it.</h2>
   <ul>
     <li>An agent answered the founding interview and wrote the company brain</li>
-    <li>The goal agent planned, priced, and built the product</li>
-    <li>Every gate was answered by policy, citing a clause</li>
-    <li>The product listed, outbound sent, a stranger paid</li>
+    <li>The goal agent chose the product, wrote the copy, set the price at $19</li>
+    <li>Every gate was answered by policy, or escalated when no clause fit</li>
+    <li>Listed, priced, and on sale, with the decisions on the record</li>
   </ul>
   <div class="row">
     <div><div class="stat"><span class="fill">[N]</span></div>
@@ -159,7 +162,7 @@
 <!-- 6 ─ money + study -->
 <section class="slide">
   <div class="kicker">The proof</div>
-  <h2>Real money. Real people.</h2>
+  <h2>Real money. Real limits.</h2>
   <div class="row">
     <div><div class="stat">$<span class="fill">[N]</span></div>
          <div class="statlabel">revenue, our own Stripe</div></div>
@@ -168,11 +171,19 @@
     <div><div class="stat"><span class="fill">[N]</span></div>
          <div class="statlabel">strangers, not in this room</div></div>
   </div>
-  <p class="body" style="margin-top:2rem">We also put the policy itself to
-  <span class="fill">[N]</span> real people through Terac. They disagreed with it on
-  <span class="fill">[N]</span> of ten questions, so we rewrote those clauses.</p>
-  <p class="body muted">The product got better because real humans told us it was wrong.
-  Before: <span class="fill">[N]%</span> agreement. After: <span class="fill">[N]%</span>.</p>
+  <p class="body" style="margin-top:1.8rem">We tried to buy aggregate judgment too: a
+  general-population study on the policy itself. The approver approved the spend, citing P2 and P3
+  with the day's running total in its reasoning.</p>
+  <pre>Terac quoted    n=10          $150.00
+                n=7           $115.50
+                n=5            $82.50
+                n=5 @ 1 min    $67.50
+
+policy ceiling, single spend   <span style="color:#4ec9a0">$15.00</span>
+                <span style="color:#f0b866">every rung refused. $0 moved.</span></pre>
+  <p class="body muted">It wanted the data and could not afford it under its own rules, so it went
+  without. The refusal is on the ledger, and it is the better exhibit: the spending gates bind the
+  company's own appetite, not just ours.</p>
 </section>
 
 <!-- 7 ─ close -->

@@ -11,6 +11,42 @@
 > **Anirudh — your Claude should read that file first and start at US-0.4.** You need no prior
 > knowledge of this repo; your stories are self-contained.
 
+## Onboarding to the codebase fast (both Claudes)
+
+This repo ships a **knowledge graph of itself** in `graphify-out/` — 285 nodes, 484 edges, 27
+communities, built from AST extraction plus semantic extraction over every doc.
+
+**Do not read the whole repo to orient. Query the graph instead:**
+
+```bash
+graphify query "how does the taskrunner gate work?"     # BFS, broad context
+graphify query "what calls add_task.py?" --dfs           # DFS, trace one path
+graphify path "goal agent skill" "Finalization gate"     # shortest path between two concepts
+graphify explain "The autonomy contract"                 # plain-language node explanation
+```
+
+If the `graphify` CLI isn't installed (`uv tool install graphifyy`), read `graph.json` directly with
+NetworkX — nodes carry `label`, `source_file`, `source_location`, `community`; `links` carry
+`relation`, `confidence`, `confidence_score`.
+
+- **`graphify-out/GRAPH_REPORT.md`** — start here. God nodes, cross-community bridges, surprising
+  connections, the 9 hyperedges, and the community map.
+- **`graphify-out/graph.html`** — open in a browser for the visual map.
+- **`graphify-out/graph.json`** — machine-readable, repo-relative paths, portable.
+
+**Three findings from it that shape this hackathon** (so you don't rediscover them):
+1. **`taskrunner` is the hub.** Everything funnels into `tasks.json` via `add_task.py`. It depends on
+   nothing; `email-operator`, `goals`, `health`, and `prospection` all depend on it.
+2. **One safety invariant repeats under five names** across five blocks (hyperedge: *"the owner's-yes
+   safety floor"*) — taskrunner's finalization gate, email-operator's "never irreversible on your
+   own", prospection's approve-before-send, scheduled-tasks' review mode, health's red-becomes-a-ticket.
+   **That hyperedge is what this hackathon project inverts.**
+3. **`goals` is the strategy layer above taskrunner, not a rival orchestrator** — `goal.md:20-21`:
+   *"You steer, you don't execute."* Its autonomy contract (`goal.md:13-17`) is the one place the
+   safety floor is already deliberately inverted, and it's the seed of the approver agent.
+
+*Regenerate after big changes:* `/graphify . --update`
+
 ---
 
 ## Working agreement (both lanes)

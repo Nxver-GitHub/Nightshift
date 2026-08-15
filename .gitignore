@@ -30,5 +30,10 @@ Thumbs.db
 .vscode/
 node_modules/
 
-# graphify build artifacts (regenerable)
-graphify-out/
+# graphify — the codebase knowledge graph.
+# graph.json / graph.html / GRAPH_REPORT.md ARE committed: they map this repo for
+# any agent onboarding to it. Everything else is machine-specific or regenerable.
+graphify-out/cache/
+graphify-out/manifest.json
+graphify-out/cost.json
+graphify-out/.graphify_*

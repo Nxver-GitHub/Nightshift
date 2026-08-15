@@ -53,6 +53,12 @@
   .v.app { color:var(--ok); border-color:var(--ok); }
   .who { font-size:.72rem; color:var(--muted); white-space:nowrap; }
   .who.h { color:var(--accent); font-weight:700; }
+  /* Marks the ledger rows below as illustrative. They are styled like the real dashboard, and
+     slide 3 invites the audience to verify things, so the distinction has to be visible. */
+  .exlabel { font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);
+             border:1px solid var(--line); border-radius:20px; padding:2px 10px;
+             align-self:flex-start;   /* a flex child stretches otherwise, however it is displayed */
+             margin-bottom:.6rem; }
   .nav { position:fixed; bottom:1.1rem; right:1.4rem; color:var(--muted); font-size:.8rem;
          letter-spacing:.06em; }
   .hint { position:fixed; bottom:1.1rem; left:1.4rem; color:var(--line); font-size:.75rem; }
@@ -125,17 +131,16 @@
 <section class="slide">
   <div class="kicker">When policy can't decide</div>
   <h2>The company hires a human.<br>And expenses it.</h2>
+  <div class="exlabel">Example</div>
   <div class="dec"><span class="v esc">escalated</span>
-    <span>"May Nightshift list the Policy Gate Kit on Whop's marketplace, under terms that take a
-    revenue share on each sale?"</span>
-    <span class="who">agent · P9</span></div>
-  <div class="dec human"><span class="v app">hired</span>
-    <span>Posted to Terac. Authorized $14.00 against the policy's own $15 ceiling; Terac priced it
-    at $13.50.</span>
-    <span class="who h">terac · <span class="fill">[verdict]</span></span></div>
-  <p class="body" style="margin-top:1.6rem">Pricing and selling are covered by the policy. A
-  revenue-share distribution agreement with a third party is not, and P9 forbids stretching a
-  clause by analogy. So it refused to guess and bought the judgment instead.</p>
+    <span>"A buyer asks for an invoice addressed to their employer. Issue it?"</span>
+    <span class="who">agent · 12:41</span></div>
+  <div class="dec human"><span class="v app">approve</span>
+    <span>"A buyer asks for an invoice addressed to their employer. Issue it?"</span>
+    <span class="who h">hired human · terac · $8.00</span></div>
+  <p class="body" style="margin-top:1.6rem">When no clause covers a question, the policy is
+  forbidden to guess. The company posts it to Terac, a verified human answers, payment releases on
+  completion, and the answer lands in the same field the agent would have written.</p>
   <p class="big" style="margin-top:1.4rem">No employees. No owner in the loop.<br>When it needs a
   human, it <span style="color:var(--accent)">buys</span> one.</p>
 </section>

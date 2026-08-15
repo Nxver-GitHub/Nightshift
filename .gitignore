@@ -29,3 +29,6 @@ Thumbs.db
 .idea/
 .vscode/
 node_modules/
+
+# graphify build artifacts (regenerable)
+graphify-out/

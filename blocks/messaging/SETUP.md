@@ -9,16 +9,25 @@
 2. Create an API token. It is a bearer token used as `Authorization: Bearer <token>`.
 3. Provision (or confirm) a sending number. You need it in **E.164** form: `+15551234567`.
 
-## 2. Export both values in your shell
+## 2. Put both values in `.env`
 
-They live in your shell and nowhere else. Never in a file in this repo, never in a commit, never
-pasted into a chat.
+`.env` sits at the repo root, is gitignored, and is where every other credential in this project
+already lives. Add:
+
+```
+LINQ_API_KEY=...
+LINQ_FROM_NUMBER=+15551234567
+MESSAGING_PROVIDER=linq
+```
+
+Then load it into the shell you are working in — once, not per key:
 
 ```bash
-export LINQ_API_KEY=...
-export LINQ_FROM_NUMBER=+15551234567
-export MESSAGING_PROVIDER=linq        # optional; linq is the default
+set -a; source .env; set +a
 ```
+
+Editing `.env` does not affect a terminal that is already open, so re-run that line after any
+change. Never commit `.env`, and never paste a key into a chat or an issue.
 
 ## 3. Check what the policy currently allows
 

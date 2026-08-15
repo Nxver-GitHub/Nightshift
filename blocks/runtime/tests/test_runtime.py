@@ -125,7 +125,12 @@ def test_deploy_sequence_clone_then_supervisor_then_preview(monkeypatch, state_f
     run(monkeypatch, control, data, ["--state", state_file, "deploy"])
 
     assert [c["method"] for c in data.calls] == ["POST", "POST"]
-    assert "git clone" in json.loads(data.calls[0]["body"])["command"]
+    clone_command = json.loads(data.calls[0]["body"])["command"]
+    assert "git clone" in clone_command
+    # The Superserve credential proxy is only for brokered provider secrets. Public GitHub
+    # traffic goes direct, avoiding the proxy's private CA and never carrying its auth token.
+    for proxy_var in ("HTTPS_PROXY", "HTTP_PROXY", "ALL_PROXY"):
+        assert f"-u {proxy_var}" in clone_command
     assert "supervisor.sh" in json.loads(data.calls[1]["body"])["command"]
     # Preview port published only after the supervisor that serves it is running.
     assert [(m, p) for m, p, _ in control.calls] == [

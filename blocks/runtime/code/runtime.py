@@ -197,6 +197,10 @@ def cmd_deploy(args):
     # Clone the public repo. The VM is the runtime, git is the deployment mechanism —
     # redeploying is `git pull`, not re-provisioning.
     clone = vm_exec(sid, token,
+                    # Superserve's HTTPS proxy brokers provider credentials; a public GitHub
+                    # clone needs neither the proxy nor its private CA. Keep provider traffic
+                    # proxied, but send this one public fetch directly.
+                    f"env -u HTTPS_PROXY -u HTTP_PROXY -u ALL_PROXY "
                     f"git clone --depth 1 --branch {shlex.quote(args.branch)} -- "
                     f"{shlex.quote(args.repo)} {VM_REPO} "
                     f"&& chmod +x {VM_REPO}/blocks/runtime/code/*.sh "

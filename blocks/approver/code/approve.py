@@ -41,7 +41,11 @@ def resolve_tasks(arg: Optional[str]) -> str:
     return os.path.abspath(os.path.join(here, "..", "..", "taskrunner", "code", "tasks.json"))
 
 
-def resolve_ledger() -> str:
+def resolve_ledger(arg: str = None) -> str:
+    """--ledger flag beats env beats default. The flag exists so headless callers can pass every
+    path on the command line — env vars don't survive into a `claude -p` session's tool shells."""
+    if arg:
+        return os.path.abspath(arg)
     env = os.environ.get("APPROVER_LEDGER")
     if env:
         return os.path.abspath(env)
@@ -87,9 +91,9 @@ def is_pending(t: dict) -> bool:
     return t.get("status") == "waiting_owner" and bool(q) and q.get("answer") is None
 
 
-def ledger_append(entry: dict) -> None:
+def ledger_append(entry: dict, ledger_arg: str = None) -> None:
     """Append-only, one JSON object per line: a decision is evidence and is never rewritten."""
-    path = resolve_ledger()
+    path = resolve_ledger(ledger_arg)
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     with open(path, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
@@ -197,7 +201,8 @@ def cmd_answer(a: argparse.Namespace) -> int:
     # so a ledger failure is loud and distinct (exit 3), never a raw traceback.
     try:
         ledger_append({"ts": now(), "task_id": a.id, "question": question_text, "verdict": a.verdict,
-                       "reason": reason, "policy_clauses_cited": refs, "mode": "agent"})
+                       "reason": reason, "policy_clauses_cited": refs, "mode": "agent"},
+                      getattr(a, "ledger", None))
     except OSError as e:
         print(f"ERROR: answer for {a.id} IS live in the kanban, but the ledger write FAILED: {e} — "
               f"append this decision to the ledger manually before the next pass.", file=sys.stderr)
@@ -223,7 +228,7 @@ def cmd_escalate(a: argparse.Namespace) -> int:
     try:
         ledger_append({"ts": now(), "task_id": a.id, "question": (t.get("question") or {}).get("text", ""),
                        "verdict": "escalated", "reason": reason, "policy_clauses_cited": [],
-                       "mode": "agent"})
+                       "mode": "agent"}, getattr(a, "ledger", None))
     except OSError as e:
         print(f"ERROR: ledger write failed — escalation NOT recorded: {e}", file=sys.stderr)
         return 3
@@ -232,7 +237,7 @@ def cmd_escalate(a: argparse.Namespace) -> int:
 
 
 def cmd_log(a: argparse.Namespace) -> int:
-    path = resolve_ledger()
+    path = resolve_ledger(getattr(a, "ledger", None))
     try:
         lines = [json.loads(x) for x in open(path, encoding="utf-8") if x.strip()]
     except OSError:
@@ -263,15 +268,18 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--policy-ref", default=None, metavar="REFS",
                    help="comma-separated clause ids that justify the verdict, e.g. 'P2,P4'")
     s.add_argument("--tasks", default=None)
+    s.add_argument("--ledger", default=None, help="decisions.jsonl path (beats $APPROVER_LEDGER)")
     s.set_defaults(f=cmd_answer)
     s = sub.add_parser("escalate", help="no clause covers it — leave the task for a human")
     s.add_argument("--id", required=True)
     s.add_argument("--reason", required=True)
     s.add_argument("--tasks", default=None)
+    s.add_argument("--ledger", default=None, help="decisions.jsonl path (beats $APPROVER_LEDGER)")
     s.set_defaults(f=cmd_escalate)
     s = sub.add_parser("log", help="dump the decision ledger")
     s.add_argument("--json", action="store_true")
     s.add_argument("--limit", type=int, default=0)
+    s.add_argument("--ledger", default=None, help="decisions.jsonl path (beats $APPROVER_LEDGER)")
     s.set_defaults(f=cmd_log)
     return ap
 

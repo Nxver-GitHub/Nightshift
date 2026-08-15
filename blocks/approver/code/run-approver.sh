@@ -10,11 +10,19 @@ DIR="${APPROVER_DIR:-$(cd "$(dirname "$0")" && pwd)}"
 MODEL="${APPROVER_MODEL:-claude-opus-5}"
 LOG="$DIR/approver.log"
 
+# Resolve config HERE and pass it inside the prompt text. Env vars exported by the caller do
+# NOT reliably reach a `claude -p` session's tool shells (they initialize fresh) — a dry run
+# proved a headless pass silently saw an empty default kanban. Paths in the prompt are
+# deterministic; env inheritance is not.
+TASKS="${TASKRUNNER_TASKS:-$DIR/../../taskrunner/code/tasks.json}"
+POLICY="${APPROVER_POLICY:?APPROVER_POLICY must be set — the approver cannot reason without the written policy}"
+LEDGER="${APPROVER_LEDGER:-$DIR/decisions.jsonl}"
+
 # Don't burn a model call on an empty queue: the kanban is usually fully answered.
 # rc is checked EXPLICITLY — inside `[ $(...) ]`, set -e does not catch a failing substitution,
 # and a broken config (missing kanban, bad TASKRUNNER_TASKS) must fail loudly here, not fall
 # through into a paid model call.
-PENDING=$(python3 "$DIR/approve.py" pending --json) || {
+PENDING=$(TASKRUNNER_TASKS="$TASKS" APPROVER_POLICY="$POLICY" python3 "$DIR/approve.py" pending --json) || {
   echo "ERROR: approve.py pending failed — check TASKRUNNER_TASKS / kanban path. Aborting before any model call." >&2
   echo "=== $(date '+%Y-%m-%d %H:%M') — ABORT: pending check failed ===" >> "$LOG"
   exit 1
@@ -27,6 +35,10 @@ fi
 echo "=== run $(date '+%Y-%m-%d %H:%M') — approver ===" >> "$LOG"
 # Trust boundary: "$*" is appended into the model prompt verbatim. Only a trusted operator or a
 # fixed cron line may pass arguments — never route third-party text (emails, form input) in here.
-claude -p "Load and follow the approver skill for ONE pass over the pending owner questions. Read the policy file first; approve or reject only where a clause clearly applies, and escalate everything else. You answer questions only — never execute an approved action yourself. $*" \
-  --model "$MODEL" >> "$LOG" 2>&1
+claude -p "Load and follow the approver skill for ONE pass over the pending owner questions. Config for THIS pass — pass paths as FLAGS, never as env prefixes (commands must start with python3 for the permission rule to match): list with python3 '$DIR/approve.py' pending --tasks '$TASKS' --json ; decide with python3 '$DIR/approve.py' answer --tasks '$TASKS' --ledger '$LEDGER' --id ... --verdict ... --reason ... --policy-ref ... ; escalate with python3 '$DIR/approve.py' escalate --tasks '$TASKS' --ledger '$LEDGER' --id ... --reason ... — the policy file to read first is '$POLICY'. Approve or reject only where a clause clearly applies, and escalate everything else. You answer questions only — never execute an approved action yourself. $*" \
+  --model "$MODEL" \
+  --allowedTools "Bash(python3 *)" >> "$LOG" 2>&1
+# Scoped permission, not --dangerously-skip-permissions: the headless approver may run python3
+# (approve.py needs it) and nothing else beyond the default read tools. A dry run proved the
+# default permission set denies python3 entirely, stranding correct verdicts unexecuted.
 echo "=== end $(date '+%H:%M') ===" >> "$LOG"

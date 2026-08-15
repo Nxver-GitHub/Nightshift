@@ -1,4 +1,4 @@
-# Changelog — Project Sunday
+# Changelog — Nightshift
 
 Append-only. Newest entries on top. Date format `YYYY-MM-DD`.
 

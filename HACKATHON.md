@@ -1,6 +1,6 @@
 # Terac "Zero-Human Company" Hackathon — build plan
 
-**Team:** Surya + Anirudh · **Event:** 8:30am start, demos ~6/7pm · **Base:** fork of Project Sunday
+**Team:** Surya + Anirudh + Pravin · **Event (per organizer guidebook):** doors 8:30am · keys/credits Notion doc at opening ceremony 9:15–9:45 · hacking begins 10:45 · **submissions LOCK 6:45pm (our upload target: 6:30)** · judging 7–8pm · **Base:** fork of Project Sunday
 
 > ## 👉 START HERE: [`Agents/Release Plan/hackathon-release-plan.md`](Agents/Release%20Plan/hackathon-release-plan.md)
 >
@@ -53,7 +53,7 @@ NetworkX — nodes carry `label`, `source_file`, `source_location`, `community`;
 
 | Rule | Detail |
 |---|---|
-| **Lanes** | Surya → `blocks/approver/`, `blocks/labor/`, `kit/` on `surya/autonomy`. Anirudh → `blocks/payments/`, storefront, hosting on `anirudh/payments`. **Never edit a file outside your lane** — note it at the checkpoint and let the owner change it. |
+| **Lanes** | Surya → `blocks/approver/`, `blocks/labor/`, `kit/` on `surya/autonomy`. Anirudh → `blocks/payments/`, storefront, hosting on `anirudh/payments`. Pravin → `blocks/dashboard/`, `demo-assets/`, submission package on `pravin/audit` (brief: `PRAVIN.md`). **Never edit a file outside your lane** — note it at the checkpoint and let the owner change it. |
 | **Merges** | `main` only at checkpoints: end of tonight · 12:00 · 14:00 · 16:00 freeze. |
 | **95% rule** | If Claude is not 95%+ confident in a decision, output, or answer affecting this project, it stops and runs `grill-me`. Never guess. |
 | **Story start** | Claude runs `grill-me` at the start of every user story to pin scope before writing code. |
@@ -114,7 +114,7 @@ an agent. The company founds itself.
 |---|---|
 | 1 | **Keep the gates, swap the approver.** Human "yes" → policy-evaluating agent. Not a guardrail removal. |
 | 2 | **Constrained autonomy.** We fix the domain ("digital product, <$25, instant delivery"); the agent picks product, copy, price. |
-| 3 | **Rail:** Merchant-of-Record first (Dodo/Whop) — no account-activation blocker. Stripe as second rail. |
+| 3 | **Rail (FLIPPED 8/15 per guidebook):** Stripe individual account is the PRIMARY live rail — organizers track revenue via a read-only restricted key on OUR Stripe account, and "Best Overall Agent-Run Company" eligibility requires collecting through it. Revenue on Dodo/Whop is invisible to them. MoR demoted to stretch. |
 | 4 | **Product:** agent-generated digital work product for founders/builders. Terac is the *escalation path*, never the COGS (experts bill $60–220/hr; that kills unit economics and the quants in the room will notice). |
 | 5 | **Customers:** live outbound to real strangers all day **and** in-room sales as the guaranteed floor. Say both out loud — transparency about the backup is what makes the primary claim believable. |
 | 6 | **Split:** Surya owns the autonomy spine (needs repo knowledge). Anirudh owns the money/storefront surface (needs none — he has zero commits here). |
@@ -130,17 +130,17 @@ Every integration is a **block that declares credential names, never values** (r
 ### Tier 1 — thesis-critical
 | Sponsor | Role | Env var (fill tomorrow) |
 |---|---|---|
-| **Terac** | Buys human judgment when policy can't decide. Host's product, sits exactly where the repo has a hole. | `TERAC_API_KEY` |
+| **Terac** | Buys human judgment when policy can't decide. Host's product, sits exactly where the repo has a hole. **Guidebook: Terac MCP usage is REQUIRED to submit at all** — plus a "measurable before/after from real human input" criterion (expert judgment qualifies; they push General-Population studies as fastest). | `TERAC_API_KEY` |
 | **Superserve** | Persistent microVMs for long-horizon agents. `start-taskrunner.sh` uses `caffeinate` + a PID lock — it is a laptop script. This makes the loop a company. | `SUPERSERVE_API_KEY` |
-| **Payment (MoR)** | The win condition. MoR = they are the legal seller; no merchant activation. | `DODO_API_KEY` / `WHOP_API_KEY` |
+| **Payment (Stripe live)** | The win condition. Primary rail per guidebook eligibility: one canonical Payment Link submitted to organizers (same link for EVERY transaction — new links mid-day break their revenue tracking) + a second restricted key (Balance/Charges Read, all else None) submitted for tracking. Never submit our working rk_/sk_ keys. | `STRIPE_API_KEY` |
 
 ### Tier 2 — visible, cheap, cuttable
 | Sponsor | Role | Env var |
 |---|---|---|
 | **Whop** | Storefront the agent creates and lists into | `WHOP_API_KEY` |
 | **Lovable** | Agent-generated landing page. *Roman Yanushevskyi (judge) is an AI Engineer at Lovable* — 30 min, done well. | — (UI) |
-| **Render** | Hosts dashboard + payment webhook receiver | `RENDER_API_KEY` |
-| **Stripe** | Second rail, Agent Toolkit + MCP | `STRIPE_API_KEY` |
+| **Render** | Hosts dashboard + payment webhook receiver. Prize note: "Best use of Render" requires **Render Workflows** specifically — static hosting alone doesn't qualify. | `RENDER_API_KEY` |
+| **Dodo/Whop (MoR)** | Demoted from primary (guidebook flip, Decision 3): second rail only, behind the same `pay.py` seam. Organizers can't see MoR revenue. | `DODO_API_KEY` / `WHOP_API_KEY` |
 
 ### Tier 3 — only after freeze is safe
 **Pioneer** (Claude-compatible endpoint, one-line model swap for the tick loop — ~10 min) ·
@@ -149,6 +149,33 @@ Every integration is a **block that declares credential names, never values** (r
 
 ### Not integrations
 **SignalFire · 1517 · Bagel Fund · SOLO · Interview Cake** — VCs, funds, education. Do not pad.
+
+---
+
+## Guidebook facts (organizer Notion, read 8/15 morning — trust these over older assumptions)
+
+**Tracks we enter** (multi-track allowed, more tracks = better odds): Best Overall Project ($2,500) ·
+Best Overall Agent-Run Company ($2,500, requires Stripe rail + real revenue) · Best use of Superserve
+($1,000 — must be "core part of stack"; US-1.4 qualifies) · Pioneer ($500 — US-3.3; bonus for Fastino
+GLiNER models) · stretch: Linq ($1,500 — biggest sponsor pot; Agent Pay settles to our own Stripe) ·
+Render ($500 credits — only if webhook moves to Render Workflows).
+
+**Prize-eligibility mechanics (Anirudh executes, Surya's account):**
+1. Stripe individual account (no business verification needed for hackathon).
+2. ONE Payment Link, created once, submitted to organizers, reused for every sale.
+3. A dedicated read-only restricted key: Balance=Read, Charges=Read, everything else None.
+4. Submit: team name + link URL + that rk_ key. Never the working keys, never sk_.
+
+**Credits redemption (at/after 9:15 ceremony):** Superserve = plain signup, no card ·
+Lovable code `COMM-THE-4G9T` (Pro Plan 1 monthly, cancel after) · Pioneer promo `ZeroHumanHack0826` ·
+Replay code `HACKATHON` · Render credits portal (link in guidebook) · Terac referral link in guidebook.
+**KNOWN BLOCKER:** Terac credit redemption failing on their Twilio phone verification (8/15 morning) —
+retry later or a teammate redeems; terac driver is built against docs + stub until the key works.
+
+**Judges (corrected):** two YC S26 CTO pairs (Touchmark, Olam) — Roman Yanushevskyi is Touchmark CTO
+/ Lovable AI Engineer / ex-Citadel · Shubh Mittal (MTS @ xAI) on Best Overall. **Tosh Rayadhurgam
+(Head of Advanced AI @ Stripe)** and a DeepMind Group PM judge Best Agent-Run Company + Render.
+The Stripe-rail story and the Lovable page each have a judge in the room.
 
 ---
 
@@ -180,14 +207,14 @@ pay.py sales --json                                         → closed sales
 
 | Time | Surya | Anirudh |
 |---|---|---|
-| 8:30 | Collect all sponsor keys from Slack. Fill env. | Read `ANIRUDH.md` |
+| 8:30 | Check in. Keys/credits arrive via Notion doc at the 9:15–9:45 ceremony; fill env after. Redeem credits (see Guidebook facts). | Read `ANIRUDH.md` |
 | 9–12 | Terac live · agent-run founding interview · start live outbound | Whop storefront · Lovable page |
 | **12:00** | **PAYMENT MUST BE GREEN.** Real card, real charge, recorded in `crm.py`. | Render deploy |
 | 12–2 | Wire Superserve runtime | Dashboard shows live revenue |
 | **2:00** | **Full spine demoed end-to-end, once.** No stretch item starts before this. | |
 | 2–4 | Tier 3 only if spine is green | |
 | **4:00** | **HARD FREEZE.** No new code. | |
-| 4–6 | Rehearse · build the audit trail · rehearse again | |
+| 4–6:30 | Rehearse · audit trail · rehearse again. Pravin finalizes + uploads the submission by **6:30** (lock is 6:45). | |
 
 **Freeze at 4 even if demos are at 7.** Teams lose this format by shipping at minute −5.
 

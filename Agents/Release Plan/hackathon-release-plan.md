@@ -1,7 +1,8 @@
 # Project Sunday — Zero-Human Company Release Plan (Terac Hackathon)
 
 > **Builds on:** Project Sunday v0 (brain + 10 built blocks, all tested)
-> **Team:** 2 developers (Surya — autonomy lane · Anirudh — money lane) | **Sprints:** 5, mapped to clock time (18h total)
+> **Team:** 3 developers (Surya — autonomy lane · Anirudh — money lane · Pravin — evidence/audit lane, branch `pravin/audit`, brief in `PRAVIN.md`) | **Sprints:** 5, mapped to clock time (18h total)
+> **Submission: LOCKS 6:45pm — our upload target 6:30pm (Pravin owns the upload).** Guidebook deltas of 8/15 are folded in below; where this file and `HACKATHON.md` "Guidebook facts" disagree, the guidebook facts win.
 > **Hosting target:** Superserve (agent loop, persistent microVM) + Render (storefront + webhook receiver)
 > **Release window:** Tonight → tomorrow 4:00pm code freeze → demo ~6–7pm
 
@@ -53,7 +54,7 @@ approver agent did, with an audit trail.
 | Concern | Decision |
 |---|---|
 | Gate surface | `blocks/taskrunner/code/update_task.py` — `--question` sets `status=waiting_owner` + `question={text, asked_at, answer, answered_at}`; `--consume-question` clears; `--finalize TYPE=DETAIL` gates push/email/deploy/archive through the same mechanism. The approver writes `question.answer` — drop-in human replacement, **zero block modification**. |
-| Payment rail | **Merchant-of-Record first** (Dodo `DODO_API_KEY` / Whop `WHOP_API_KEY`) — MoR is the legal seller, no merchant-activation blocker. **Stripe second rail** (`STRIPE_API_KEY`, Payment Links + Agent Toolkit/official MCP). Tonight: Stripe **test mode** (free, instant) so the flow is real before any sponsor key exists. |
+| Payment rail | **FLIPPED 8/15 (guidebook): Stripe live is the PRIMARY rail** — "Best Overall Agent-Run Company" eligibility requires collecting through our own Stripe individual account; organizers track revenue via a read-only restricted key (Balance/Charges) and ONE submitted Payment Link reused for every sale (new links mid-day break their tracking). MoR (Dodo/Whop) demoted to stretch behind the same `pay.py` seam — organizers can't see MoR revenue. |
 | The seam | `blocks/payments/code/pay.py` — 3 commands, mirrors the `crm.py` CLI idiom: `create-link --title --amount --currency` → URL · `status --link-id` → `paid|unpaid` · `sales --json`. Anirudh builds it; Surya only calls it. |
 | Revenue ledger | `blocks/crm/code/crm.py` `projects` table — `amount` column, stages incl. `won`/`delivered`. Every sale recorded here so the existing dashboard shows revenue with no new UI. |
 | Agent runtime | Superserve (`SUPERSERVE_API_KEY`) persistent Firecracker microVMs replace `start-taskrunner.sh`. State survives restarts. |
@@ -82,6 +83,7 @@ approver agent did, with an audit trail.
   only post-freeze-safe.
 - **Strict lane ownership.** Surya: `blocks/approver/`, `blocks/labor/`, `kit/` (branch
   `surya/autonomy`). Anirudh: `blocks/payments/`, storefront, hosting (branch `anirudh/payments`).
+  Pravin: `blocks/dashboard/`, `demo-assets/`, submission package (branch `pravin/audit`).
   Never edit a file outside your lane; note cross-lane needs at the checkpoint, the owner makes it.
 - **Merge to `main` at fixed checkpoints only:** end of tonight, 12pm, 2pm, 4pm freeze.
 - One user story at a time. No fake/hardcoded data — every story wires end-to-end or documents the gap.
@@ -224,17 +226,25 @@ them all (names only).
 > **Theme:** Keys arrive at 8:30. HARD DEADLINE: a real-money payment path is green by 12:00.
 > Anirudh owns the money; Surya makes the company able to buy human judgment and live off the laptop.
 
-### US-1.1 — Real Money via Merchant-of-Record **[ANIRUDH]** *(2h)*
-When a real person completes checkout on the storefront, real money is captured with the MoR as
-legal seller — no merchant-activation blocker — and `pay.py status` reports `paid`. The Stripe
-test-mode adapter from US-0.4 is swapped for the MoR rail (Dodo first, Whop fallback) by setting
-`PAYMENT_PROVIDER` + the key: a one-line env swap, because the seam was built tonight.
-- **Fetch current Dodo/Whop API docs before coding the adapter** — their API surfaces were not
-  verified from this repo; do not code from memory.
-- Prove it: one $1–$5 live transaction from a team-external card if possible, else a live-mode
-  transaction refunded immediately per MoR rules.
-- Stripe live kept as second rail behind the same interface.
-- pytest adapter tests re-run against the MoR sandbox; Playwright checkout re-run on the live storefront.
+### US-1.1 — Real Money via Stripe Live + Prize Eligibility **[ANIRUDH]** *(2h — REWRITTEN 8/15 per guidebook)*
+When a real person completes checkout on the storefront, real money is captured on OUR Stripe
+individual account — the rail organizers can see — and `pay.py status` reports `paid`. The Stripe
+driver already works in test mode (US-0.4); this story takes it live and does the eligibility
+paperwork:
+- Fix the account's public name (still "TravelAgent" → NIGHTSHIFT, Settings → Business → Public
+  details) BEFORE creating the canonical link — the link carries the public name and a Stripe
+  judge will see it.
+- Create THE canonical Payment Link once, at the agent's chosen price ($19 — it already priced the
+  product, narrative intact). **Reuse this exact link for every sale all day** — organizer revenue
+  tracking follows the submitted link; minting new links breaks it. The stripe driver's
+  `create-link` returns the canonical link for the listed product instead of minting fresh ones.
+- Create a SECOND restricted key for organizers: Balance=Read, Charges=Read, everything else None.
+  Submit team name + link URL + that rk_ key. Never our working keys, never sk_.
+- Prove it: one $1–$5 live transaction from a team-external card if possible, else a live
+  transaction refunded immediately.
+- Stretch only (was primary): Dodo MoR driver behind the same seam as a second rail.
+- pytest re-run against live-mode config (suite hard-refuses live keys for mutation tests — keep
+  that guard); Playwright checkout re-run on the live storefront.
 
 **Out of scope:** payouts/withdrawals; subscriptions; refund automation beyond the policy's refund rule.
 
@@ -262,6 +272,13 @@ Terac charge is recorded in the CRM ledger as a cost event, shown next to revenu
 - **Fetch current Terac MCP/REST docs at 8:30am before coding** — the exact endpoint shapes are
   unverified from this repo; the story is blocked on docs, not guesses.
 - Escalation is bounded by policy (US-0.2): max spend per question, max open escalations.
+- **Guidebook (8/15): Terac MCP usage is REQUIRED to submit the project at all**, and the judged
+  criterion is a measurable before/after from real human input (expert judgment qualifies). So in
+  addition to the escalation path, launch ONE cheap General-Population study (their recommended
+  fastest mode) — e.g., product-page copy or price-framing test — record the before, apply the
+  result, record the after. That artifact goes in the submission.
+- **Blocker (8/15 morning):** Terac credit redemption fails on their Twilio phone verification —
+  retry later / teammate redeems. Driver is built docs-first against the stub until the key works.
 - Fallback if Terac turnaround is slow live: pre-seed one real escalation during the morning so the
   demo shows a completed hire with timestamps.
 - pytest: escalate → post → mock-complete → answer written back → consume; ledger shows the expense.
@@ -319,7 +336,7 @@ proof for the win condition.
 
 **Out of scope:** editing the recording beyond trims; multiple parallel goals.
 
-### US-2.2 — The Audit Trail a Judge Can Read **[SURYA]** *(1h)*
+### US-2.2 — The Audit Trail a Judge Can Read **[PRAVIN — reassigned 8/15, brief in `PRAVIN.md`]** *(1h)*
 When a judge opens the dashboard (existing `dashboard` block, read-only), they see — alongside the
 kanban and CRM revenue — the approver's decision ledger: every question asked, the policy clause
 cited, the verdict, who answered (agent vs. Terac human, with the expense), and timestamps. "No
@@ -357,7 +374,10 @@ When a buyer browses the company's Whop store, the agent-chosen product is liste
 
 **Out of scope:** Whop community features; migrating the primary rail.
 
-### US-3.2 — Lovable Landing Page, Agent-Generated **[SURYA proposes · ANIRUDH deploys]** *(1h)*
+### US-3.2 — Lovable Landing Page, Agent-Generated **[PRAVIN directs — reassigned 8/15]** *(1h)*
+> Guardrail: the AGENT generates the page (brief written from the brain's positioning, gated
+> through the approver); Pravin directs and judges the output, never hand-designs it — a judge
+> will probe "did a human make this?". Lovable credit code is in HACKATHON.md Guidebook facts.
 When a visitor hits the company's landing page, they see a page the AGENT generated via Lovable
 (brief written by the agent from the brain's positioning, gated through the approver), linking to
 the storefront. Judge-relevant: Roman Yanushevskyi (Lovable) is judging.
@@ -384,7 +404,7 @@ Linq docs first; consent/anti-spam clause in policy applies.
 
 ---
 
-## Sprint 4 — 4pm Freeze → Demo (~6–7pm)
+## Sprint 4 — 4pm Freeze → Submission (upload 6:30, LOCK 6:45) → Judging 7–8pm
 
 > **Theme:** Rehearsal and evidence. The code is done; the story is the work now.
 
@@ -405,6 +425,8 @@ this order — rehearsed twice, timed, with every screen pre-loaded:
    who stands behind them."
 - Also in this sprint: export/print the decision ledger; final security sweep of the public repo;
   in-room QR sales floor active the whole time; laptop + hotspot + backup recording redundancy.
+- **Pravin owns the submission package and the upload: target 6:30, hard lock 6:45.** The
+  submission must show Terac MCP usage and the before/after artifact (US-1.3) or it is ineligible.
 
 **Out of scope:** new features, restyling, refactors — anything that is code.
 
@@ -441,6 +463,8 @@ this order — rehearsed twice, timed, with every screen pre-loaded:
 | 12pm payment gate missed | Low | High | Sprint 2 proceeds on test mode; US-1.1 becomes the only money-lane task until green |
 | Secret leaks in the public repo | Low | Critical | Blocking security gate every story; names-only manifests; final sweep in Sprint 4 |
 | Live demo network failure | Med | Med | US-2.1 recording is the backbone; hotspot backup; dashboard runs local |
+| Terac credit redemption blocked (their Twilio phone-verify issue, seen 8/15 am) | High | High (Terac MCP is REQUIRED to submit) | Retry later; any teammate can redeem; driver built docs-first against stub; escalate at their booth 10:20–10:45 |
+| Canonical Payment Link regenerated mid-day | Low | High (organizer revenue tracking misses it) | Link created once in US-1.1, stored in `product.json`/env, `create-link` returns it; if regeneration is forced, notify organizers immediately |
 
 ## Backlog (Out of Scope)
 

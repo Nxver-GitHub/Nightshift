@@ -47,8 +47,19 @@ while [ -f "$FLAG" ]; do
   bash "$NS/blocks/runtime/code/tick-taskrunner.sh" \
     || echo "[supervisor] taskrunner pass failed (exit $?) — next cycle retries"
 
-  # 4. Sales -> CRM. record_sales is idempotent on session id, so re-runs are safe.
+  # 4. Sales -> CRM. Idempotent on (provider, session_id), so re-runs are safe.
+  #    --providers matters for correctness: `pay.py sales` answers for ONE rail, so a bare `run`
+  #    records whatever PAYMENT_PROVIDER happens to be and every sale on the other rail is
+  #    invisible to the CRM and the dashboard.
+  #
+  #    Default is `stripe` alone — deliberately NOT `stripe,whop`. A named rail that cannot answer
+  #    (Whop has no key set today, and the driver is still unverified against the live API) fails
+  #    that rail and exits 1 every single cycle. The primary rail keeps recording, but the log
+  #    fills with failures and a REAL Stripe failure stops standing out. Widen it the moment Whop
+  #    is verified and keyed:
+  #        export SALES_PROVIDERS=stripe,whop
   python3 "$NS/blocks/payments/code/record_sales.py" run \
+      --providers "${SALES_PROVIDERS:-stripe}" \
       --crm-db "${CRM_DB:-$NS/blocks/crm/code/crm.db}" \
       --state "$NS/blocks/payments/code/recorded.jsonl" \
     || echo "[supervisor] sales recording failed (exit $?) — next cycle retries"

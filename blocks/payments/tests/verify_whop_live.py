@@ -109,6 +109,14 @@ def cmd_probe(a):
         print("\nNOTE: purchase_url came back empty — whop_create_link's `purchase_url` field name "
               "is already wrong. Inspect the saved dump before buying anything.")
 
+    # P7 is a policy obligation, not a nice-to-have, so it gets checked at create time rather than
+    # waiting for the post-purchase pass: if `description` is not the field Whop stores, the listing
+    # is live and silently missing its disclosure. Verify it on the product page before promoting.
+    print("\nP7 CHECK — open the product page and confirm this sentence is visible on it:")
+    print(f"  {pay.P7_DISCLOSURE}")
+    print("A listing without it must not be promoted: P7 requires it on every public surface, and "
+          "P10 makes a listing that reads as human-run unapprovable by anyone.")
+
 
 def cmd_raw(a):
     """One unfiltered page of GET /payments, straight from the transport.

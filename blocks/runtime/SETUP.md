@@ -58,6 +58,16 @@ dashboard (kept alive, port 8787, bound 0.0.0.0 for the preview URL) → approve
 (`record_sales.py`, idempotent). Stop it from outside with
 `exec --cmd "rm /home/user/nightshift/.runtime.on"`.
 
+**Which payment rails the recorder reads** is `SALES_PROVIDERS` (default `stripe`). `pay.py sales`
+answers for one rail at a time, so any rail not named here is invisible to the CRM and the
+dashboard. The default is the primary rail alone on purpose: a named rail that cannot answer fails
+and exits 1 *every cycle*, which floods the log and hides a real Stripe failure. Once Whop is keyed
+and verified (`blocks/payments/tests/verify_whop_live.py`), widen it:
+
+```bash
+export SALES_PROVIDERS=stripe,whop
+```
+
 ## Fallback
 
 If provisioning fails on demo day: laptop runtime as before (`start-taskrunner.sh` + cron'd

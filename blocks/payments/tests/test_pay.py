@@ -402,6 +402,25 @@ def test_whop_create_link_one_call_inline_plan(monkeypatch, capsys):
     assert "ch_TEST" in out
 
 
+def test_whop_product_carries_the_p7_disclosure(monkeypatch, capsys):
+    """P7: every public-facing surface identifies the seller as an autonomous agent. A Whop product
+    page IS such a surface, and it is created from this body — so the disclosure has to travel with
+    it. The storefront block renders its own; this driver is the only author of the Whop one.
+    P10 makes a listing that reads as human-run unapprovable by anyone, so this is not cosmetic."""
+    recorder = WhopRecorder(whop_config_response())
+    run_whop(monkeypatch, recorder, ["create-link", "--title", "Policy Gate Kit", "--amount", "19"])
+    description = recorder.calls[0][2]["plan"]["product"]["description"]
+    assert pay.P7_DISCLOSURE in description
+    assert "autonomous agent" in description.lower()
+
+
+def test_p7_disclosure_constant_cannot_be_blanked(monkeypatch, capsys):
+    """Guard the constant itself: an empty or agent-free disclosure would ship a silently
+    non-compliant listing, and the assertion above would still pass against ''."""
+    assert pay.P7_DISCLOSURE.strip()
+    assert "autonomous agent" in pay.P7_DISCLOSURE.lower()
+
+
 def test_whop_create_link_json_shape(monkeypatch, capsys):
     run_whop(monkeypatch, WhopRecorder(whop_config_response()),
              ["create-link", "--title", "X", "--amount", "19.50", "--json"])

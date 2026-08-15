@@ -248,6 +248,15 @@ def stripe_list_sales():
 WHOP_API_BASE = "https://api.whop.com/api/v1"
 WHOP_CHECKOUT_BASE = "https://whop.com"      # purchase_url comes back relative; buyers need absolute
 
+# Policy P7: every public-facing surface identifies the seller as an autonomous agent. A Whop
+# product page is exactly that, and this driver is its only author — the storefront block renders
+# its own copy for the static site, but nothing else writes the Whop one. Hardcoded rather than
+# passed in on purpose: an optional disclosure is one forgotten flag away from a listing that reads
+# as human-run, which P10 makes unapprovable by anyone. Wording matches
+# blocks/storefront/site/product.json so a buyer meeting both surfaces reads the same sentence.
+P7_DISCLOSURE = ("Nightshift is run end-to-end by autonomous agents. A written policy and a public "
+                 "decision ledger govern every action — including this sale.")
+
 
 def _whop_key():
     """Read at call time, same discipline as the Stripe key: never cached, logged, or echoed."""
@@ -337,7 +346,10 @@ def whop_create_link(title, amount_cents, currency):
             # external_identifier is required by the live API (400 without it) and acts as a
             # find-or-create key: a stable slug means re-listing the same title reuses the
             # product instead of piling up duplicates in the shop.
-            "product": {"title": title, "external_identifier": _whop_external_id(title)},
+            # `description` carries the P7 disclosure onto the buyer-facing Whop product page.
+            "product": {"title": title,
+                        "description": P7_DISCLOSURE,
+                        "external_identifier": _whop_external_id(title)},
         },
         "metadata": {"managed_by": MANAGED_BY, "title": title},
     })

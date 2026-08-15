@@ -34,7 +34,7 @@ if KEY.lower().startswith(("sk_live_", "rk_live_")):
         "STRIPE_API_KEY is a LIVE key. The live suite refuses to run against live mode — "
         "export a test key (sk_test_/rk_test_...) instead. No test in this repo may move real money.")
 
-# rk_test_ = a restricted test key (Products:Write, Payment Links:Write, Checkout Sessions:Read
+# rk_test_ = a restricted test key (Products:Write, Prices:Write, Payment Links:Write, Checkout Sessions:Read
 # is all pay.py needs) — the recommended scope for an agent-held credential.
 live_only = pytest.mark.skipif(
     not KEY.startswith(("sk_test_", "rk_test_")),

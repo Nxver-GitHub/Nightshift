@@ -64,9 +64,9 @@ VM_ENV = {
     "DASH_PORT": str(DASH_PORT),
     "DASH_BIND": "0.0.0.0",              # preview URLs route to in-VM listeners; loopback is invisible
     # Claude Code remains the agent harness, while Pioneer supplies provider-neutral inference
-    # through its Anthropic-compatible endpoint. The brokered Pioneer token is bound below as
-    # ANTHROPIC_API_KEY, so the real credential never enters the VM.
-    "ANTHROPIC_BASE_URL": "https://api.pioneer.ai/v1",
+    # through its Anthropic-compatible endpoint. Base URL WITHOUT /v1 — the CLI appends
+    # /v1/messages itself (docs.pioneer.ai/claude-code; /v1 here produced /v1/v1/messages).
+    "ANTHROPIC_BASE_URL": "https://api.pioneer.ai",
 }
 
 # The state files worth mirroring to the demo laptop. decisions.jsonl is the product;
@@ -290,6 +290,9 @@ def cmd_push_env(args):
         if not value:
             sys.exit(f"{local_name} is not set in the local environment — export it and retry.")
         lines.append(f"{vm_name}={value}")
+    # The sandbox's create-time env may carry a stale base URL; the override file wins because
+    # the supervisor sources it after the base env (fixes /v1/v1 on already-deployed sandboxes).
+    lines.append(f"ANTHROPIC_BASE_URL={VM_ENV['ANTHROPIC_BASE_URL']}")
     if args.approver_model:
         lines.append(f"APPROVER_MODEL={args.approver_model}")
         lines.append(f"TASKRUNNER_MODEL={args.approver_model}")

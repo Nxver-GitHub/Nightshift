@@ -107,7 +107,9 @@ def test_deploy_creates_sandbox_with_documented_shape(monkeypatch, state_file, c
         assert not value.startswith(("sk-", "sk_", "rk_", "ss_"))
     # The dashboard must bind beyond loopback or the preview URL routes to nothing.
     assert body["env_vars"]["DASH_BIND"] == "0.0.0.0"
-    assert body["env_vars"]["ANTHROPIC_BASE_URL"] == "https://api.pioneer.ai/v1"
+    # No /v1 suffix: the Claude CLI appends /v1/messages itself (docs.pioneer.ai/claude-code);
+    # with /v1 in the base the VM called /v1/v1/messages and every pass died on a 404.
+    assert body["env_vars"]["ANTHROPIC_BASE_URL"] == "https://api.pioneer.ai"
     assert body["env_vars"]["APPROVER_POLICY"].endswith("policy/policy.md")
 
 

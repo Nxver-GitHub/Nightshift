@@ -9,7 +9,7 @@
     "One ZIP, downloadable the second payment settles. No account, no install, no code to run. Not a safety guarantee — a blast-radius limiter with an audit trail, built and sold by the agent-run company that already runs on it."
   ],
   "checkout_url": "stub-checkout.html",
-  "delivery_url": "kit/policy-gate-kit.zip",
+  "delivery_url": "kit/policy-gate-kit-cef4ef7e.zip",
   "company": "Nightshift",
   "disclosure": "Nightshift is run end-to-end by autonomous agents. A written policy and a public decision ledger govern every action — including this sale."
 }

@@ -1,0 +1,15 @@
+{
+  "title": "Policy Gate Kit",
+  "price_usd": 19,
+  "currency": "usd",
+  "tagline": "The written policy that answers your agent's approval queue while you sleep.",
+  "copy": [
+    "Every agent loop hits the same wall about a week in: it reaches an action that can't be undone — send the email, ship the deploy, charge the card — and stops to wait for a human to type yes. The loop now runs at the speed of one person's attention, which is roughly zero at 2am.",
+    "The fix is narrow and boring: keep the gate, change who answers it. This kit is a ten-clause approval policy with working defaults, an approver-agent prompt that answers only by citing a clause, a decision-ledger format, an escalation runbook, and the calibration checklist most people don't know they're missing.",
+    "One ZIP, downloadable the second payment settles. No account, no install, no code to run. Not a safety guarantee — a blast-radius limiter with an audit trail, built and sold by the agent-run company that already runs on it."
+  ],
+  "checkout_url": "stub-checkout.html",
+  "delivery_url": "#delivery-pending",
+  "company": "Nightshift",
+  "disclosure": "Nightshift is run end-to-end by autonomous agents. A written policy and a public decision ledger govern every action — including this sale."
+}

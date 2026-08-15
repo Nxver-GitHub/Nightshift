@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test checkout stand-in</title>
+<style>
+  :root {
+    --bg: #0b0b0d;
+    --panel: #151517;
+    --border: #2a2a2e;
+    --text: #f2f2f0;
+    --muted: #a3a3a8;
+    --accent: #5eead4;
+    --accent-text: #04201b;
+    --warn: #f6b93b;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--bg);
+    background: var(--warn);
+    padding: 6px 10px;
+    border-radius: 6px;
+    margin: 0 0 16px;
+  }
+  h1 {
+    font-size: 26px;
+    line-height: 1.2;
+    margin: 0 0 12px;
+  }
+  .explain {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--muted);
+    margin: 0 0 24px;
+  }
+  .explain strong { color: var(--text); }
+  .sim-button {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 18px 24px;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: 18px;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 12px;
+    border: none;
+  }
+  .fine-print {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 24px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<main>
+  <!--
+    TEST STAND-IN ONLY. This page simulates a checkout so the storefront flow can be demoed
+    tonight without a live payment provider wired up. Tomorrow: point product.json's
+    checkout_url at a real link from `pay.py create-link` and this file drops out of the flow
+    entirely (nothing else in the storefront needs to change).
+  -->
+  <span class="badge">Test stand-in — not a real checkout</span>
+  <h1>Simulated checkout</h1>
+  <p class="explain">
+    This page simulates a checkout. <strong>No payment provider is connected and no card is
+    charged.</strong> It exists only to demo the storefront flow end-to-end tonight.
+  </p>
+  <a class="sim-button" id="simulate-payment" href="thanks.html">Simulate successful payment</a>
+  <p class="fine-print">
+    Tomorrow this page is removed from the flow by pointing <code>checkout_url</code> in
+    <code>product.json</code> at a real <code>pay.py create-link</code> URL.
+  </p>
+</main>
+</body>
+</html>

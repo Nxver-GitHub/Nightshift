@@ -1,12 +1,12 @@
-# POLICY-TEMPLATE.md
+# 01-POLICY-TEMPLATE.md
 
 **What this is:** the ten-clause approval policy your agent loop's gate answers from. Fill the slots,
 save it somewhere your approver agent can read on every pass, and it becomes the written owner —
 the thing that says yes, no, or "a human has to decide this" while you are asleep.
 
-**Where it fits:** this is file 1 of 6 and the centre of the kit. `APPROVER-PROMPT.md` is the agent
-that reads this file. `LEDGER-SCHEMA.md` records what it decided. `ESCALATION-RUNBOOK.md` covers the
-cases this file can't answer. `CALIBRATION-CHECKLIST.md` tests whether your filled-in version holds
+**Where it fits:** this is file 1 of 6 and the centre of the kit. `03-APPROVER-PROMPT.md` is the agent
+that reads this file. `04-LEDGER-SCHEMA.md` records what it decided. `05-ESCALATION-RUNBOOK.md` covers the
+cases this file can't answer. `02-CALIBRATION-CHECKLIST.md` tests whether your filled-in version holds
 up. Fill this one first; the other five assume it exists.
 
 ---
@@ -277,7 +277,7 @@ impossible to un-send.
   the first one went unanswered. Two days is a floor, not a target.
 - Check your numbers against your sending provider's actual limits and your jurisdiction's rules
   before you write them down. This clause is your policy, not your legal compliance — see
-  `WHAT-THIS-IS-NOT.md`.
+  `06-WHAT-THIS-IS-NOT.md`.
 
 ### P7 — Agent disclosure
 
@@ -375,7 +375,7 @@ use. The approver writes nothing, changes no status, takes no action. The work s
 human left it. An escalation that half-did something is worse than either verdict.
 
 **Filling this in.** Mostly you don't; take it verbatim. What you *do* need to decide is where
-escalations go and how fast they're answered — that's `ESCALATION-RUNBOOK.md`, file 4. A policy with
+escalations go and how fast they're answered — that's `05-ESCALATION-RUNBOOK.md`, file 4. A policy with
 a clean P9 and no route out of it is a queue that never drains, which is the exact problem you bought
 this kit to solve.
 
@@ -422,18 +422,18 @@ name. "Don't do risky things" is not a hard NO.
 
 ## After you fill it in
 
-1. **Run `CALIBRATION-CHECKLIST.md` against it.** Twelve questions, about fifteen minutes. It is
+1. **Run `02-CALIBRATION-CHECKLIST.md` against it.** Twelve questions, about fifteen minutes. It is
    designed to find the gaps this template can't know about — the ones specific to what your loop
    actually does.
-2. **Wire `APPROVER-PROMPT.md` to read this file at the start of every pass** — from the file, not
+2. **Wire `03-APPROVER-PROMPT.md` to read this file at the start of every pass** — from the file, not
    from memory, not from the previous pass. A policy the agent remembers is a policy you can't edit.
 3. **Turn on the ledger before the first decision, not after the first surprise** — see
-   `LEDGER-SCHEMA.md`.
+   `04-LEDGER-SCHEMA.md`.
 4. **Version it.** Bump `policy_version` on every change, keep the old file. When you review a
    six-week-old decision, you need to know which text was in force when it was made.
 5. **Let escalations write your clauses.** Every escalation is a question your policy couldn't
    answer. Answer it once as a human, then add the clause so it never escalates again
-   (`ESCALATION-RUNBOOK.md`). A policy that isn't growing isn't being used.
+   (`05-ESCALATION-RUNBOOK.md`). A policy that isn't growing isn't being used.
 
 A last note on the thing that makes this hard. Anyone can write a policy. What almost nobody does
 unprompted is the unpleasant part: naming the actual numbers, defining escalation so that silence is

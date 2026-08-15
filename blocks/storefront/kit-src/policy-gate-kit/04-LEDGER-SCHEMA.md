@@ -1,10 +1,10 @@
-# LEDGER-SCHEMA.md
+# 04-LEDGER-SCHEMA.md
 
 **What this is:** the format of `decisions.jsonl` — the append-only audit trail your approver writes
 one line to for every verdict it reaches. Field by field, plus a worked example of a single day.
 
-**Where it fits:** this is file 3 of 6. The approver in `APPROVER-PROMPT.md` writes to it, the daily
-spend cap in `POLICY-TEMPLATE.md` (P3) is computed *from* it, and `ESCALATION-RUNBOOK.md` reads the
+**Where it fits:** this is file 3 of 6. The approver in `03-APPROVER-PROMPT.md` writes to it, the daily
+spend cap in `01-POLICY-TEMPLATE.md` (P3) is computed *from* it, and `05-ESCALATION-RUNBOOK.md` reads the
 escalations out of it. It is also the artifact you show when someone asks "who approved that?"
 
 ---
@@ -184,7 +184,7 @@ Read the spend lines in order — the day's running total is the story.
 - **The last two lines are the same `task_id`.** `t-108` escalated at 12:15 and was answered by a
   human at 21:05, `"mode":"human"`. That pair — the escalation and its resolution, in one file, in
   time order — is the shape of a working gate. It is also the moment a new clause gets written; see
-  `ESCALATION-RUNBOOK.md`.
+  `05-ESCALATION-RUNBOOK.md`.
 - **`t-115` is a reject, not an escalation.** The daily cap is unambiguous, so the policy answers it.
   This is the line most people's first ledger gets wrong: they escalate cap breaches, then approve
   them at 11pm because it's only $12.

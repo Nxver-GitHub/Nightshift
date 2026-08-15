@@ -1,11 +1,11 @@
-# ESCALATION-RUNBOOK.md
+# 05-ESCALATION-RUNBOOK.md
 
 **What this is:** what to do when the policy can't decide. The escalate verdict, why an escalated task
 must be left completely untouched, how to get a human answer fast (including buying one), and how
 every escalation turns into a clause so the same question never escalates twice.
 
-**Where it fits:** this is file 4 of 6. It picks up where P9 of `POLICY-TEMPLATE.md` leaves off and
-where the `escalated` lines in `LEDGER-SCHEMA.md` accumulate. If you only wire up files 1–3, you have
+**Where it fits:** this is file 4 of 6. It picks up where P9 of `01-POLICY-TEMPLATE.md` leaves off and
+where the `escalated` lines in `04-LEDGER-SCHEMA.md` accumulate. If you only wire up files 1–3, you have
 a gate that stops correctly and a queue that never drains. This file is the drain.
 
 ---

@@ -1,13 +1,13 @@
-# APPROVER-PROMPT.md
+# 03-APPROVER-PROMPT.md
 
 **What this is:** the prompt for the agent that sits on your gate. It reads your filled-in
-`POLICY-TEMPLATE.md`, looks at whatever is waiting for a human "yes", and answers each item by citing
+`01-POLICY-TEMPLATE.md`, looks at whatever is waiting for a human "yes", and answers each item by citing
 a clause — approve, reject, or escalate. Paste-ready for a Claude Code skill, a Cursor rule, a system
 prompt in an SDK harness, or the instructions block of any agent framework.
 
 **Where it fits:** this is file 2 of 6. It is useless without file 1 — the policy is the authority,
-this is only the reader. It writes to the ledger in `LEDGER-SCHEMA.md` (file 3) and its escalations
-are picked up by `ESCALATION-RUNBOOK.md` (file 4).
+this is only the reader. It writes to the ledger in `04-LEDGER-SCHEMA.md` (file 3) and its escalations
+are picked up by `05-ESCALATION-RUNBOOK.md` (file 4).
 
 ---
 
@@ -205,7 +205,7 @@ clause goes.
 answer — including the ones that should be rejected and the ones that should escalate — and run the
 pass against them. Getting the approvals right is easy. What you're checking is whether it escalates
 when it should, and whether it rejects the case with a genuinely good-sounding justification.
-`CALIBRATION-CHECKLIST.md` is where those questions come from.
+`02-CALIBRATION-CHECKLIST.md` is where those questions come from.
 
 **Watch the escalation rate over time.** Falling means your policy is learning. A sudden spike means
 your loop has wandered toward the edge of your stated domain, which is an early warning worth more

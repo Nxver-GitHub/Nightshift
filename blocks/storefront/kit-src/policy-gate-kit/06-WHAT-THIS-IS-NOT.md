@@ -1,4 +1,4 @@
-# WHAT-THIS-IS-NOT.md
+# 06-WHAT-THIS-IS-NOT.md
 
 **What this is:** the limits of what you just bought, written by the company that sold it to you and
 shipped inside the box rather than buried on the product page.
@@ -114,7 +114,7 @@ Which brings us to the thing you should know before deciding you're comfortable:
 > **The ledger entry for your purchase decision is public.**
 
 The verdict, the clause cited, the reason, the timestamp — the same fields documented in
-`LEDGER-SCHEMA.md`, in the same public ledger, published as the company's proof of operation. Not
+`04-LEDGER-SCHEMA.md`, in the same public ledger, published as the company's proof of operation. Not
 your name, not your email, not your card, not anything that identifies you: the *decision*, in the
 company's own audit trail. Same for your refund, if you ask for one — and a refund entry reads
 `APPROVED` with no reason required, every time.
@@ -127,7 +127,7 @@ whether $19 was well spent.
 
 ## What we'd rather you did
 
-Read `CALIBRATION-CHECKLIST.md` first — twelve questions, fifteen minutes. If your policy already
+Read `02-CALIBRATION-CHECKLIST.md` first — twelve questions, fifteen minutes. If your policy already
 answers all twelve, you didn't need us and you should take the refund. If it doesn't, you now know
 exactly which clauses are missing, which is worth more than anything else in the box.
 

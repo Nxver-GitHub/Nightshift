@@ -1,11 +1,11 @@
-# CALIBRATION-CHECKLIST.md
+# 02-CALIBRATION-CHECKLIST.md
 
 **What this is:** twelve questions to run against your filled-in policy before you let an agent gate
 itself with it. Each one is a real trap — a case that looks obvious and isn't — with the specific
 clause to add if your policy comes up empty.
 
-**Where it fits:** this is file 5 of 6. Run it after filling in `POLICY-TEMPLATE.md` and before
-wiring `APPROVER-PROMPT.md` to anything that can actually spend, send, or ship. Budget fifteen
+**Where it fits:** this is file 5 of 6. Run it after filling in `01-POLICY-TEMPLATE.md` and before
+wiring `03-APPROVER-PROMPT.md` to anything that can actually spend, send, or ship. Budget fifteen
 minutes. It is the shortest file in the kit with the highest return, because these are the questions
 people don't know they're missing.
 
@@ -224,7 +224,7 @@ in. Without a domain clause, an agent will accept this, and you are now a servic
 delivery obligation and no humans.
 
 Correct verdict: **escalate** on the domain clause. (After a human declines it once, this becomes
-the textbook new clause — see `ESCALATION-RUNBOOK.md`.)
+the textbook new clause — see `05-ESCALATION-RUNBOOK.md`.)
 
 > **If your policy can't answer this:** add a **domain clause** naming what you sell, to whom, in
 > what price band, delivered how — plus an explicit list of the **adjacencies you refuse**

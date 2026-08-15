@@ -2,6 +2,8 @@
 
 **A kit that lets an AI agent build your company's "brain" — by interviewing you, not by making you fill in templates.**
 
+<sub>Forked from **[Project Sunday](https://github.com/MaxSch1/Project-Sunday)** by [Meridiem](https://meridiem.be/en), created by Maxime Schifflers.</sub>
+
 
 Nightshift is a small, self-contained repository. You clone it, open it in
 [Claude Code](https://claude.com/claude-code), and say `go`. From there an agent runs a

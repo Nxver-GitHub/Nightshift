@@ -7,7 +7,8 @@ Goal: the Nightshift loop runs in a Superserve microVM, not on a laptop. One com
 
 1. Sign up at https://superserve.ai and grab `SUPERSERVE_API_KEY` (`ss_live_…`) from the console.
 2. In the console → **Secrets**, create two secrets (this is where real values live — never here):
-   - name `anthropic-key`, provider **Anthropic**, value = the company's Anthropic API key
+   - name `pioneer-key`, provider **Custom**, header `X-API-Key`, no prefix, allowed host
+     `api.pioneer.ai`, value = the company's Pioneer API key
    - name `stripe-key`, value = the company's Stripe restricted key
    The VM will see stand-in tokens, never these values.
 3. Export the control-plane key in your shell: `export SUPERSERVE_API_KEY=ss_live_…`
@@ -21,8 +22,12 @@ python3 blocks/runtime/code/runtime.py deploy
 # → dashboard: https://8787-<id>.sandbox.superserve.ai
 ```
 
-Options: `--repo` / `--branch` (what the VM clones), `--anthropic-secret` / `--stripe-secret`
+Options: `--repo` / `--branch` (what the VM clones), `--inference-secret` / `--stripe-secret`
 (Superserve secret NAMES if you named them differently), `--state` (state-file path).
+
+The VM still uses Claude Code as its audited tool-execution harness, but model inference goes to
+Pioneer's Anthropic-compatible endpoint (`https://api.pioneer.ai/v1`). The Pioneer credential is
+therefore bound to `ANTHROPIC_API_KEY`; it is not an Anthropic-issued key.
 
 The state file (`code/.superserve-state.json`, git-ignored, 0600) holds the sandbox id and its
 access token. Treat it like a key.

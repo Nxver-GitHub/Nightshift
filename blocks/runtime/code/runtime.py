@@ -13,7 +13,7 @@ Design notes (this file is read by other agents, so the WHY is written down):
   access to the VM that runs the company. It lives in a git-ignored JSON file with 0600
   perms, never in argv, never printed. `resume` rotates it (the API returns a fresh one).
 - **Secrets are bound by NAME.** `deploy` passes Superserve *secret names*
-  (`anthropic-key`, `stripe-key`); the operator created those once in the Superserve
+  (`pioneer-key`, `stripe-key`); the operator created those once in the Superserve
   console. The real values never transit this tool, this repo, or the VM's env — the VM
   sees stand-in proxy tokens that Superserve swaps at egress.
 - **Stdlib only.** Zero pip deps repo-wide by design; this speaks the published REST API
@@ -63,6 +63,10 @@ VM_ENV = {
     "CRM_DB": f"{VM_REPO}/blocks/crm/code/crm.db",
     "DASH_PORT": str(DASH_PORT),
     "DASH_BIND": "0.0.0.0",              # preview URLs route to in-VM listeners; loopback is invisible
+    # Claude Code remains the agent harness, while Pioneer supplies provider-neutral inference
+    # through its Anthropic-compatible endpoint. The brokered Pioneer token is bound below as
+    # ANTHROPIC_API_KEY, so the real credential never enters the VM.
+    "ANTHROPIC_BASE_URL": "https://api.pioneer.ai/v1",
 }
 
 # The state files worth mirroring to the demo laptop. decisions.jsonl is the product;
@@ -171,7 +175,7 @@ def cmd_deploy(args):
     if not re.fullmatch(r"[A-Za-z0-9._/-]+", args.branch):
         sys.exit(f"--branch contains characters that have no business in a branch name: {args.branch!r}")
 
-    secrets = {"ANTHROPIC_API_KEY": args.anthropic_secret}
+    secrets = {"ANTHROPIC_API_KEY": args.inference_secret}
     if args.stripe_secret:
         secrets["STRIPE_API_KEY"] = args.stripe_secret
 
@@ -302,8 +306,10 @@ def build_parser():
     d.add_argument("--repo", default=os.environ.get("NIGHTSHIFT_REPO", DEFAULT_REPO))
     d.add_argument("--branch", default="main")
     d.add_argument("--template", default=TEMPLATE)
-    d.add_argument("--anthropic-secret", default="anthropic-key",
-                   help="Superserve SECRET NAME bound to ANTHROPIC_API_KEY (never a value)")
+    d.add_argument("--inference-secret", "--anthropic-secret", dest="inference_secret",
+                   default="pioneer-key",
+                   help="Superserve SECRET NAME for Pioneer, bound to ANTHROPIC_API_KEY for "
+                        "Claude Code compatibility (never a value)")
     d.add_argument("--stripe-secret", default="stripe-key",
                    help="Superserve SECRET NAME bound to STRIPE_API_KEY; empty string to skip")
     d.add_argument("--private", action="store_true",

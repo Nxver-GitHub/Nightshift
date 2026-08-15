@@ -101,13 +101,23 @@ def test_deploy_creates_sandbox_with_documented_shape(monkeypatch, state_file, c
     assert body["metadata"] == {"role": "nightshift-loop"}
     assert body["preview_access"] == "public"
     # Secrets are NAMES the operator registered with Superserve — never values.
-    assert body["secrets"] == {"ANTHROPIC_API_KEY": "anthropic-key",
+    assert body["secrets"] == {"ANTHROPIC_API_KEY": "pioneer-key",
                                "STRIPE_API_KEY": "stripe-key"}
     for value in body["secrets"].values():
         assert not value.startswith(("sk-", "sk_", "rk_", "ss_"))
     # The dashboard must bind beyond loopback or the preview URL routes to nothing.
     assert body["env_vars"]["DASH_BIND"] == "0.0.0.0"
+    assert body["env_vars"]["ANTHROPIC_BASE_URL"] == "https://api.pioneer.ai/v1"
     assert body["env_vars"]["APPROVER_POLICY"].endswith("policy/policy.md")
+
+
+def test_deploy_accepts_legacy_anthropic_secret_flag(monkeypatch, state_file):
+    control, data = deploy_recorders()
+    run(monkeypatch, control, data, ["--state", state_file, "deploy",
+                                    "--anthropic-secret", "legacy-anthropic-key"])
+
+    body = control.payload_for("POST", "/sandboxes")
+    assert body["secrets"]["ANTHROPIC_API_KEY"] == "legacy-anthropic-key"
 
 
 def test_deploy_sequence_clone_then_supervisor_then_preview(monkeypatch, state_file):

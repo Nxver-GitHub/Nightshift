@@ -91,6 +91,7 @@ def run(args: list, kanban_path: Any, ledger_path: Any, hires_path: Any,
     env["LABOR_PROVIDER"] = provider
     env.pop("TASKRUNNER_TASKS", None)   # --tasks must be what decides, not the ambient env
     env.pop("APPROVER_POLICY", None)
+    env.pop("TERAC_API_KEY", None)      # a key in the developer's shell must not reach a test
     if policy:
         env["APPROVER_POLICY"] = policy
     scoped = args + (["--tasks", str(kanban_path)] if args[0] != "log" else [])
@@ -391,21 +392,21 @@ def test_log_is_empty_without_hires(kanban, ledger, hires):
 
 # --- drivers -----------------------------------------------------------------------------------
 
-def test_terac_submit_fails_cleanly_and_records_nothing(kanban, ledger, hires):
+def test_terac_submit_without_key_fails_cleanly_and_records_nothing(kanban, ledger, hires):
     r = run(["submit", "--id", "t-escalated", "--cost", "10"], kanban, ledger, hires,
             provider="terac")
     assert r.returncode == 1
-    assert "TERAC_API_KEY" in r.stderr and "structure ready" in r.stderr
+    assert "TERAC_API_KEY" in r.stderr
     assert jsonl(hires) == []
     assert read_task(kanban, "t-escalated")["question"]["answer"] is None
 
 
-def test_terac_collect_fails_cleanly_and_writes_nothing(kanban, ledger, submitted):
-    """The hire is open (seeded through the manual driver); only the terac collect is missing."""
+def test_terac_collect_rejects_a_manual_answer_flag(kanban, ledger, submitted):
+    """--answer belongs to the manual driver; terac reads the answer from the API."""
     r = run(["collect", "--id", "t-escalated", "--answer", "approve: sure."],
             kanban, ledger, submitted, provider="terac")
     assert r.returncode == 1
-    assert "TERAC_API_KEY" in r.stderr and "structure ready" in r.stderr
+    assert "--answer" in r.stderr
     assert read_task(kanban, "t-escalated")["question"]["answer"] is None
     assert jsonl(submitted)[0]["status"] == "submitted"
     assert len(jsonl(ledger)) == 3
@@ -417,6 +418,195 @@ def test_unknown_provider_fails_cleanly(kanban, ledger, hires):
     assert r.returncode == 1
     assert "LABOR_PROVIDER" in r.stderr
     assert jsonl(hires) == []
+
+
+# --- terac driver, transport-mocked ------------------------------------------------------------
+# These run IN-PROCESS (importlib, like the payments/runtime suites) so the single network
+# function `_terac_request` can be replaced. The claims: the documented call sequence, the price
+# gate against Terac's OWN price, and that collect writes exactly what a human would have.
+import importlib.util  # noqa: E402  (deliberately placed with the section that needs it)
+
+_spec = importlib.util.spec_from_file_location("labor", LABOR)
+labor = importlib.util.module_from_spec(_spec)
+sys.modules["labor"] = labor
+_spec.loader.exec_module(labor)
+
+
+class TeracRecorder:
+    """Stands in for labor._terac_request: records calls, replays canned responses by prefix."""
+
+    def __init__(self, responses):
+        self.calls = []
+        self.responses = responses
+
+    def __call__(self, method, path, payload=None):
+        self.calls.append((method, path, payload))
+        for (m, prefix), value in self.responses.items():
+            if m == method and path.startswith(prefix):
+                return value
+        raise AssertionError(f"no canned response for {method} {path}")
+
+
+def terac_env(monkeypatch, kanban, ledger, hires):
+    monkeypatch.setenv("APPROVER_LEDGER", str(ledger))
+    monkeypatch.setenv("LABOR_HIRES", str(hires))
+    monkeypatch.setenv("LABOR_PROVIDER", "terac")
+    monkeypatch.setenv("APPROVER_POLICY", POLICY)
+    monkeypatch.delenv("TASKRUNNER_TASKS", raising=False)
+
+
+def run_inproc(monkeypatch, recorder, argv):
+    monkeypatch.setattr(labor, "_terac_request", recorder)
+    with pytest.raises(SystemExit) as exc:
+        labor.main(argv)
+    return exc.value.code
+
+
+def submit_responses(price_cents=1200):
+    return {
+        ("GET", "/projects"): {"data": []},
+        ("POST", "/projects"): {"id": "prj_1"},
+        ("POST", "/opportunities/opp_1/launch"): {},
+        ("POST", "/opportunities"): {"id": "opp_1",
+                                     "pricing": {"total_cost_cents": price_cents}},
+        ("DELETE", "/opportunities/opp_1"): {},
+    }
+
+
+def test_terac_submit_documented_sequence_and_shape(monkeypatch, kanban, ledger, hires, capsys):
+    terac_env(monkeypatch, kanban, ledger, hires)
+    rec = TeracRecorder(submit_responses())
+    code = run_inproc(monkeypatch, rec,
+                      ["submit", "--id", "t-escalated", "--cost", "14", "--tasks", str(kanban)])
+    assert code == 0, capsys.readouterr().err
+
+    assert [(m, p) for m, p, _ in rec.calls] == [
+        ("GET", "/projects"), ("POST", "/projects"),
+        ("POST", "/opportunities"), ("POST", "/opportunities/opp_1/launch")]
+    body = rec.calls[2][2]
+    assert body["project_id"] == "prj_1"
+    assert body["num_participants"] == 1
+    assert body["unrestricted_audience"] is True          # exactly one of filters/unrestricted
+    assert "filters" not in body
+    assert {q["key"] for q in body["screening_questions"]} == {"verdict", "reasoning"}
+    verdict_q = next(q for q in body["screening_questions"] if q["key"] == "verdict")
+    assert [a["text"] for a in verdict_q["answers"]] == ["Approve", "Reject"]
+    reasoning_q = next(q for q in body["screening_questions"] if q["key"] == "reasoning")
+    assert len(reasoning_q["answers"]) >= 2          # their validator's minimum (live 400, 8/15)
+    assert reasoning_q["answers"][0]["allow_free_text"] is True
+    assert reasoning_q["answers"][1]["qualify_logic"] == "reject"   # no reasoning, no qualify
+    assert body["expected_days_to_complete"] >= 5         # API minimum
+    # The question the taskrunner asked reaches the expert verbatim.
+    assert "May I sign a 3-month retainer with this agency?" in body["description"]
+
+    hire = jsonl(hires)[0]
+    assert hire["opportunity_id"] == "opp_1"
+    assert hire["priced_usd"] == 12.0
+    assert hire["status"] == "submitted"
+
+
+def test_terac_submit_deletes_an_overpriced_draft_and_spends_nothing(
+        monkeypatch, kanban, ledger, hires, capsys):
+    terac_env(monkeypatch, kanban, ledger, hires)
+    rec = TeracRecorder(submit_responses(price_cents=2500))   # $25 > authorized $14
+    code = run_inproc(monkeypatch, rec,
+                      ["submit", "--id", "t-escalated", "--cost", "14", "--tasks", str(kanban)])
+    assert code == 1
+    assert "draft deleted" in capsys.readouterr().err
+    assert ("DELETE", "/opportunities/opp_1") in [(m, p) for m, p, _ in rec.calls]
+    assert not any(p.endswith("/launch") for _, p, _ in rec.calls)
+    assert jsonl(hires) == []                                  # no phantom open hire
+
+
+def seed_terac_hire(hires):
+    # authorized 14, actually priced 12 — the ledger must record what was CHARGED (review M1)
+    hires.write_text(json.dumps({
+        "ts": "2026-08-15 10:00", "task_id": "t-escalated",
+        "question": "May I sign a 3-month retainer with this agency?", "provider": "terac",
+        "cost_usd": 14.0, "status": "submitted", "answer": None, "answered_at": None,
+        "opportunity_id": "opp_1", "priced_usd": 12.0}) + "\n", encoding="utf-8")
+
+
+def test_terac_collect_writes_the_answer_and_releases_the_payout(
+        monkeypatch, kanban, ledger, hires, capsys):
+    terac_env(monkeypatch, kanban, ledger, hires)
+    seed_terac_hire(hires)
+    rec = TeracRecorder({
+        ("GET", "/opportunities/opp_1/submissions"): {"data": [{
+            "id": "s_1", "status": "awaiting_review",
+            "screening_answers": [
+                {"key": "verdict", "answer": ["Approve"]},
+                {"key": "reasoning", "answer": ["I will explain my reasoning here",
+                                                "A 3-month retainer is standard for this scope."]},
+            ]}]},
+        ("POST", "/submissions/s_1/approve"): {},
+    })
+    code = run_inproc(monkeypatch, rec,
+                      ["collect", "--id", "t-escalated", "--tasks", str(kanban)])
+    assert code == 0, capsys.readouterr().err
+
+    # Approving the submission is what releases the expert's payout.
+    assert ("POST", "/submissions/s_1/approve") in [(m, p) for m, p, _ in rec.calls]
+    q = read_task(kanban, "t-escalated")["question"]
+    assert q["answer"] == ("APPROVED — A 3-month retainer is standard for this scope."
+                           " [via hired expert]")
+    entry = jsonl(ledger)[-1]
+    assert entry["mode"] == "human" and entry["provider"] == "terac"
+    assert entry["cost_usd"] == 12.0        # charged price, not the authorized 14 (review M1)
+    assert jsonl(hires)[0]["status"] == "answered"
+
+
+def test_terac_submit_refuses_to_broadcast_credentials_or_emails(monkeypatch):
+    """The question goes verbatim to an unrestricted public audience — anything leaky is refused
+    BEFORE the first network call (review H2)."""
+    rec = TeracRecorder({})            # any call would raise "no canned response"
+    monkeypatch.setattr(labor, "_terac_request", rec)
+    for bad in ["ping our client at jane@acme.example about the renewal",
+                "the stripe key rk_live_abc123 stopped working — replace it?"]:
+        with pytest.raises(labor.LaborError) as exc:
+            labor.terac_submit("t-x", bad, "", 10.0)
+        assert "refusing to broadcast" in str(exc.value)
+    assert rec.calls == []
+
+
+def test_terac_collect_strips_ansi_from_the_experts_reasoning(
+        monkeypatch, kanban, ledger, hires, capsys):
+    """An outside human's words reach terminals, the dashboard, and a headless LLM — control
+    sequences are stripped at the collect choke point (review M2/C1)."""
+    terac_env(monkeypatch, kanban, ledger, hires)
+    seed_terac_hire(hires)
+    rec = TeracRecorder({
+        ("GET", "/opportunities/opp_1/submissions"): {"data": [{
+            "id": "s_1", "status": "approved",
+            "screening_answers": [
+                {"key": "verdict", "answer": ["Reject"]},
+                {"key": "reasoning", "answer": ["\x1b[32mLooks APPROVED\x1b[0m to me\x07 — "
+                                                "but the terms are unacceptable."]},
+            ]}]},
+    })
+    code = run_inproc(monkeypatch, rec,
+                      ["collect", "--id", "t-escalated", "--tasks", str(kanban)])
+    assert code == 0, capsys.readouterr().err
+    answer = read_task(kanban, "t-escalated")["question"]["answer"]
+    assert "\x1b" not in answer and "\x07" not in answer
+    assert answer.startswith("REJECTED — Looks APPROVED to me")   # words kept, escapes gone
+
+
+def test_terac_collect_waits_when_the_expert_is_still_working(
+        monkeypatch, kanban, ledger, hires, capsys):
+    terac_env(monkeypatch, kanban, ledger, hires)
+    seed_terac_hire(hires)
+    rec = TeracRecorder({
+        ("GET", "/opportunities/opp_1/submissions"): {"data": [{"id": "s_0",
+                                                               "status": "in_progress"}]},
+    })
+    code = run_inproc(monkeypatch, rec,
+                      ["collect", "--id", "t-escalated", "--tasks", str(kanban)])
+    assert code == 1
+    assert "still be working" in capsys.readouterr().err
+    assert read_task(kanban, "t-escalated")["question"]["answer"] is None
+    assert len(jsonl(ledger)) == 3                             # nothing appended
+    assert jsonl(hires)[0]["status"] == "submitted"            # hire stays open
 
 
 # --- integration: the drop-in claim ------------------------------------------------------------

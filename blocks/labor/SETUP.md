@@ -98,32 +98,29 @@ ceiling nobody wrote.
   dashboard/CRM reads as a cost event.
 - Run the tests after any change: `uvx pytest blocks/labor/tests/ -q`.
 
-## Tomorrow: filling in the terac driver
-The `terac` driver is a structured stub. Both functions exit 1 with
-`terac driver awaits TERAC_API_KEY + API docs (sponsor Slack, 8:30am) — structure ready, fill
-submit/collect`, so nothing silently half-works.
+## The terac driver (LIVE — filled in 8/15 against External API v2 beta)
 
-Terac offers **two integration surfaces**; either fills the same two functions:
-- **REST API** — call it directly from `labor.py` through one request helper, the way
-  `blocks/payments/code/pay.py` keeps every HTTP call in a single `_request` chokepoint (so tests
-  monkeypatch one symbol and stay offline). `submit` posts the question and returns a task ref;
-  `collect` polls for the expert's verdict.
-- **MCP** — let the labor skill call Terac's MCP tools in-session and hand the result back through
-  `labor.py collect --id X --answer "<verdict>: <reasoning>"`. No new code path at all: the manual
-  driver's parser already accepts exactly that shape.
+`LABOR_PROVIDER=terac` + `TERAC_API_KEY` in the environment is the whole switch. What it does:
 
-To fill it in:
-1. Get `TERAC_API_KEY` from the sponsor Slack at 8:30am and export it — environment only.
-2. Read the current endpoint shapes from their docs. **Do not guess them**; the story is blocked on
-   docs, not on code.
-3. Replace `_terac_unavailable` with a real `terac_submit(task_id, question, context, cost)` and
-   `terac_collect(task_id, answer, cost) -> (verdict, reasoning)` in `DRIVERS`. Everything after
-   that — the money gate, the card write, the ledger entry, the hire log — is provider-independent
-   and already done.
-4. Store the provider's task reference on the hire entry if their API returns one; store nothing
-   about the human. **No expert PII in any file.**
-5. `manual` stays the permanent fallback. If Terac is slow or down during the demo, switch
-   `LABOR_PROVIDER=manual` and the same drill works with a person in the room.
+- `submit` creates ONE Terac study per escalation under the "Nightshift escalations" project:
+  1 participant, unrestricted (general population — Terac's own fastest-fill guidance), the
+  question carried by two screening questions (pick-one **verdict**, free-text **reasoning**, an
+  answer channel their submissions API returns directly — no webhook, no hosted form). The draft
+  is created UNLAUNCHED; Terac's own price (`pricing.total_cost_cents`) is checked against your
+  `--cost` (itself gated by P2), and an over-priced or unpriced draft is deleted, never launched.
+- `collect` polls the submissions, parses verdict + reasoning out of `screening_answers`,
+  approves the submission (that's the payout release when review is manual), and hands the
+  answer to the same card/ledger machinery the manual driver uses.
+- Anything credential-shaped or personally addressed in the question/context is **refused before
+  any network call** — that text goes verbatim to a public audience.
+- `TERAC_REVIEW_TYPE` (default `auto_approve`, the only value their beta docs name) — flip it to
+  the manual-review slug once Terac confirms it, so payout waits for our validation. Until then
+  the worst case is bounded: one authorized judgment's price for an unusable answer.
+- `TERAC_TASK_URL` — participant-facing context page (default: the public repo).
+
+`manual` stays the permanent fallback. If Terac is slow or down during the demo, switch
+`LABOR_PROVIDER=manual` and the same drill works with a person in the room. No expert PII is
+stored anywhere; the hire entry keeps only the opportunity id and the price.
 
 ## Safety
 The hired human is a substitute approver for one decision, never a worker: they answer, the

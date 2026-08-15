@@ -101,13 +101,23 @@ def test_deploy_creates_sandbox_with_documented_shape(monkeypatch, state_file, c
     assert body["metadata"] == {"role": "nightshift-loop"}
     assert body["preview_access"] == "public"
     # Secrets are NAMES the operator registered with Superserve — never values.
-    assert body["secrets"] == {"ANTHROPIC_API_KEY": "anthropic-key",
+    assert body["secrets"] == {"ANTHROPIC_API_KEY": "pioneer-key",
                                "STRIPE_API_KEY": "stripe-key"}
     for value in body["secrets"].values():
         assert not value.startswith(("sk-", "sk_", "rk_", "ss_"))
     # The dashboard must bind beyond loopback or the preview URL routes to nothing.
     assert body["env_vars"]["DASH_BIND"] == "0.0.0.0"
+    assert body["env_vars"]["ANTHROPIC_BASE_URL"] == "https://api.pioneer.ai/v1"
     assert body["env_vars"]["APPROVER_POLICY"].endswith("policy/policy.md")
+
+
+def test_deploy_accepts_legacy_anthropic_secret_flag(monkeypatch, state_file):
+    control, data = deploy_recorders()
+    run(monkeypatch, control, data, ["--state", state_file, "deploy",
+                                    "--anthropic-secret", "legacy-anthropic-key"])
+
+    body = control.payload_for("POST", "/sandboxes")
+    assert body["secrets"]["ANTHROPIC_API_KEY"] == "legacy-anthropic-key"
 
 
 def test_deploy_sequence_clone_then_supervisor_then_preview(monkeypatch, state_file):
@@ -115,7 +125,12 @@ def test_deploy_sequence_clone_then_supervisor_then_preview(monkeypatch, state_f
     run(monkeypatch, control, data, ["--state", state_file, "deploy"])
 
     assert [c["method"] for c in data.calls] == ["POST", "POST"]
-    assert "git clone" in json.loads(data.calls[0]["body"])["command"]
+    clone_command = json.loads(data.calls[0]["body"])["command"]
+    assert "git clone" in clone_command
+    # The Superserve credential proxy is only for brokered provider secrets. Public GitHub
+    # traffic goes direct, avoiding the proxy's private CA and never carrying its auth token.
+    for proxy_var in ("HTTPS_PROXY", "HTTP_PROXY", "ALL_PROXY"):
+        assert f"-u {proxy_var}" in clone_command
     assert "supervisor.sh" in json.loads(data.calls[1]["body"])["command"]
     # Preview port published only after the supervisor that serves it is running.
     assert [(m, p) for m, p, _ in control.calls] == [

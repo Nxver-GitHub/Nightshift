@@ -8,7 +8,10 @@
 ## 1. Get a Stripe test key
 
 1. Sign in at `dashboard.stripe.com`. Make sure the **Test mode** toggle (top right) is ON.
-2. Developers → API keys → reveal the **Secret key**. It starts with `sk_test_`.
+2. Developers → API keys. **Preferred: create a restricted key** (`rk_test_…`) named for this
+   project with only — Products: Write · Payment Links: Write · Checkout Sessions: Read — so the
+   agent-held credential can't refund, see customers, or touch payouts. The full Secret key
+   (`sk_test_`) also works.
 3. Export it in your shell. It lives in your shell and nowhere else — never in a file in this repo,
    never in a commit, never pasted into a chat:
 

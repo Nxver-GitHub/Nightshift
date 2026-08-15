@@ -29,13 +29,15 @@ _spec.loader.exec_module(pay)
 KEY = os.environ.get("STRIPE_API_KEY", "").strip()
 
 # Hard stop, evaluated at import: a live key is a bug in the shell, not a reason to skip.
-if KEY.lower().startswith("sk_live_"):
+if KEY.lower().startswith(("sk_live_", "rk_live_")):
     raise RuntimeError(
         "STRIPE_API_KEY is a LIVE key. The live suite refuses to run against live mode — "
-        "export a test key (sk_test_...) instead. No test in this repo may move real money.")
+        "export a test key (sk_test_/rk_test_...) instead. No test in this repo may move real money.")
 
+# rk_test_ = a restricted test key (Products:Write, Payment Links:Write, Checkout Sessions:Read
+# is all pay.py needs) — the recommended scope for an agent-held credential.
 live_only = pytest.mark.skipif(
-    not KEY.startswith("sk_test_"),
+    not KEY.startswith(("sk_test_", "rk_test_")),
     reason="set STRIPE_API_KEY to a Stripe TEST key (sk_test_...) to run the live suite")
 
 

@@ -10,8 +10,11 @@
    - `APPROVER_POLICY` — the policy file you are about to write.
    - `APPROVER_LEDGER` — where decisions accumulate (default: `decisions.jsonl` next to `approve.py`).
 4. Write the policy **with the founder**, not for them. Numbered clauses, one decision each, in the
-   founder's own words. `tests/fixture_policy.md` shows the expected shape. A clause that doesn't say
-   what is permitted, up to what limit, and for whom, is not a clause — it's a mood.
+   founder's own words. `policy/policy.md` is the reference policy (machine-readable caps in the
+   frontmatter, prose clauses P1–P10 below — the two must agree, and `tests/test_policy.py` proves
+   they do). Point `APPROVER_POLICY` at it, or at the founder's own copy installed into the brain
+   at founding. A clause that doesn't say what is permitted, up to what limit, and for whom, is not
+   a clause — it's a mood.
 5. Install the skill:
    `mkdir -p ~/.claude/skills/approver && cp blocks/approver/skill/approver.md ~/.claude/skills/approver/SKILL.md`,
    then set `$AP` (the approver code dir) inside it.
@@ -39,6 +42,16 @@
 - **Tighten, don't loosen, after a surprise**: if an approve reads badly in hindsight, the fix is a
   clause, never a nudge to the skill.
 - Run the tests after any change: `python3 -m pytest blocks/approver/tests/ -q`.
+
+## Eval the reasoning (LLM behavior — separate from pytest)
+The structural tests prove the policy file is sound; whether the agent *reasons* correctly against
+it is checked by an eval pass over `tests/eval_cases.jsonl` (canned question → expected verdict +
+clauses, all three verdicts covered):
+1. Seed each case's question onto a task in a **scratch** kanban (`--tasks /tmp/eval-tasks.json`).
+2. Run one approver pass over it (`run-approver.sh` with `TASKRUNNER_TASKS` pointed at the scratch file).
+3. Diff `approve.py log --json` against each case's `expected_verdict` / `expected_clauses`.
+Run it after any policy change; a mismatch means either the clause is ambiguous (rewrite the
+clause) or the skill drifted (fix the skill). Never "fix" an eval by editing the expected verdict.
 
 ## Safety
 The approver only ever answers questions — it never performs the action it approved; the taskrunner

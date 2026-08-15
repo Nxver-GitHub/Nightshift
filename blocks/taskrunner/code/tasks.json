@@ -15,17 +15,14 @@
       "finalization": null,
       "journal": [
         "2026-08-15 12:13 — created by agent",
-        "2026-08-15 12:13 — question asked: May Nightshift list the Policy Gate Kit on Whop's marketplace under Whop's standard terms, which take a percentage revenue share on each sale? This is a new distribution agreement with a third-party platform, not a routine sale."
+        "2026-08-15 12:13 — question asked: May Nightshift list the Policy Gate Kit on Whop's marketplace under Whop's standard terms, which take a percentage revenue share on each sale? This is a new distribution agreement with a third-party platform, not a routine sale.",
+        "2026-08-15 15:34 — answered via hired human expert (terac, $13.5)",
+        "2026-08-15 15:34 — Q/A consumed — « May Nightshift list the Policy Gate Kit on Whop's marketplace under Whop's standard terms, which take a percentage revenue share on each sale? This is a new distribution agreement with a third-party platform, not a routine sale. » -> « APPROVED — I will explain my reasoning here: I approve the proposed marketplace distribution because listing the digital product on a third-party marketplace under standard revenue-share terms can expand market reach and create an additional sales channel without requiring a significant change to the existing product strategy. Since the current written policies are silent on this type of external distribution, a standard revenue-share arrangement provides a reasonable and commercially established framework, provided that the agreement does not introduce material risks involving exclusivity, intellectual property, compliance, or unfavorable contractual obligations. [via hired expert] » (2026-08-15 15:34)"
       ],
       "created_at": "2026-08-15 12:13",
       "started_at": null,
       "done_at": null,
-      "question": {
-        "text": "May Nightshift list the Policy Gate Kit on Whop's marketplace under Whop's standard terms, which take a percentage revenue share on each sale? This is a new distribution agreement with a third-party platform, not a routine sale.",
-        "asked_at": "2026-08-15 12:13",
-        "answer": null,
-        "answered_at": null
-      }
+      "question": null
     },
     {
       "id": "t-20260815-124107",

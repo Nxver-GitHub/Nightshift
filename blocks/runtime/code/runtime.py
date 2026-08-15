@@ -273,6 +273,37 @@ def cmd_pull(args):
         print(f"  pulled {rel} -> {local} ({len(data)} bytes)")
 
 
+def cmd_push_env(args):
+    """Write the direct-egress override file into the VM (0600), values read from the LOCAL env.
+
+    Exists because Superserve's TLS-intercepting credential proxy cannot serve this stack (stdlib
+    urllib has no TLS-to-proxy support; the Claude CLI rejects the proxy CA), so the supervisor
+    bypasses it when this file is present. Values travel request-body only — never argv, never
+    logs, never this repo. STRIPE_API_KEY maps from the local var of the same name;
+    ANTHROPIC_API_KEY maps from local PIONEER_API_KEY (the VM's inference goes to Pioneer's
+    Anthropic-compatible endpoint).
+    """
+    mapping = {"STRIPE_API_KEY": "STRIPE_API_KEY", "ANTHROPIC_API_KEY": "PIONEER_API_KEY"}
+    lines = []
+    for vm_name, local_name in mapping.items():
+        value = os.environ.get(local_name, "").strip()
+        if not value:
+            sys.exit(f"{local_name} is not set in the local environment — export it and retry.")
+        lines.append(f"{vm_name}={value}")
+    if args.approver_model:
+        lines.append(f"APPROVER_MODEL={args.approver_model}")
+        lines.append(f"TASKRUNNER_MODEL={args.approver_model}")
+    st = load_state(args)
+    sid, token = st["sandbox_id"], st["access_token"]
+    _data_request(sid, token, "POST",
+                  "/files?path=" + urllib.parse.quote(f"{VM_HOME}/.env.runtime"),
+                  body=("\n".join(lines) + "\n").encode(),
+                  content_type="application/octet-stream")
+    result = vm_exec(sid, token, f"chmod 600 {VM_HOME}/.env.runtime && wc -l < {VM_HOME}/.env.runtime")
+    print(f"pushed .env.runtime ({result.get('stdout', '').strip()} lines, 0600). "
+          f"Restart the supervisor to apply.")
+
+
 def cmd_pause(args):
     st = load_state(args)
     _request("POST", f"/sandboxes/{st['sandbox_id']}/pause")
@@ -334,6 +365,11 @@ def build_parser():
     pl = sub.add_parser("pull", help="mirror VM state files to the laptop (demo backup)")
     pl.add_argument("--dest", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "mirror"))
     pl.set_defaults(fn=cmd_pull)
+
+    pe = sub.add_parser("push-env", help="push the direct-egress override file (values from local env)")
+    pe.add_argument("--approver-model", default=None,
+                    help="override the model name the VM's headless passes request from Pioneer")
+    pe.set_defaults(fn=cmd_push_env)
 
     sub.add_parser("pause", help="checkpoint the VM, stop compute billing").set_defaults(fn=cmd_pause)
     sub.add_parser("resume", help="restore the VM exactly where it left off").set_defaults(fn=cmd_resume)

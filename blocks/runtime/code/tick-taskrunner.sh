@@ -50,7 +50,18 @@ if [ "$ACTIONABLE" = "0" ]; then
   exit 0
 fi
 
-echo "=== run $(date '+%Y-%m-%d %H:%M') — taskrunner tick ($ACTIONABLE actionable) ===" >> "$LOG"
+# Spend guard: same daily model-pass budget as run-approver.sh, same counter file — counted
+# only when a paid call is about to happen. Quiet cycles stay free and uncounted.
+BUDGET_FILE="${MODEL_BUDGET_FILE:-$HOME/.model-passes-$(date '+%Y%m%d')}"
+PASSES=$(cat "$BUDGET_FILE" 2>/dev/null || echo 0)
+MAX="${MODEL_PASSES_PER_DAY:-40}"
+if [ "$PASSES" -ge "$MAX" ]; then
+  echo "=== $(date '+%Y-%m-%d %H:%M') — SKIPPED: daily model-pass budget reached ($PASSES/$MAX) ===" >> "$LOG"
+  exit 0
+fi
+echo $((PASSES + 1)) > "$BUDGET_FILE"
+
+echo "=== run $(date '+%Y-%m-%d %H:%M') — taskrunner tick ($ACTIONABLE actionable, pass $((PASSES + 1))/$MAX today) ===" >> "$LOG"
 # Trust boundary: "$*" reaches the model prompt verbatim — operator/cron input only, never
 # third-party text. The gate stays intact headlessly: this pass may CONSUME answered questions
 # but must never invent an answer (that is the approver's job, and only the approver's).

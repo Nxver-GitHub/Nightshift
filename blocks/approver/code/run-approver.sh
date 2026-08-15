@@ -32,7 +32,20 @@ if [ "$PENDING" = "[]" ]; then
   exit 0
 fi
 
-echo "=== run $(date '+%Y-%m-%d %H:%M') — approver ===" >> "$LOG"
+# Spend guard: a hard daily cap on model passes, counted ONLY when a paid call is about to
+# happen (the empty-queue skip above costs nothing and is not counted). Inference runs on a
+# fixed prepaid credit with auto-recharge off; this cap keeps a runaway loop from even
+# reaching that platform-side floor. Shared with tick-taskrunner.sh via the same counter file.
+BUDGET_FILE="${MODEL_BUDGET_FILE:-$HOME/.model-passes-$(date '+%Y%m%d')}"
+PASSES=$(cat "$BUDGET_FILE" 2>/dev/null || echo 0)
+MAX="${MODEL_PASSES_PER_DAY:-40}"
+if [ "$PASSES" -ge "$MAX" ]; then
+  echo "=== $(date '+%Y-%m-%d %H:%M') — SKIPPED: daily model-pass budget reached ($PASSES/$MAX) ===" >> "$LOG"
+  exit 0
+fi
+echo $((PASSES + 1)) > "$BUDGET_FILE"
+
+echo "=== run $(date '+%Y-%m-%d %H:%M') — approver (pass $((PASSES + 1))/$MAX today) ===" >> "$LOG"
 # Trust boundary: "$*" is appended into the model prompt verbatim. Only a trusted operator or a
 # fixed cron line may pass arguments — never route third-party text (emails, form input) in here.
 claude -p "Load and follow the approver skill for ONE pass over the pending owner questions. Config for THIS pass — pass paths as FLAGS, never as env prefixes (commands must start with python3 for the permission rule to match): list with python3 '$DIR/approve.py' pending --tasks '$TASKS' --json ; decide with python3 '$DIR/approve.py' answer --tasks '$TASKS' --ledger '$LEDGER' --id ... --verdict ... --reason ... --policy-ref ... ; escalate with python3 '$DIR/approve.py' escalate --tasks '$TASKS' --ledger '$LEDGER' --id ... --reason ... — the policy file to read first is '$POLICY'. Approve or reject only where a clause clearly applies, and escalate everything else. You answer questions only — never execute an approved action yourself. $*" \

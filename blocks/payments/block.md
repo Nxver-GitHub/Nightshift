@@ -20,20 +20,33 @@ one environment variable rather than one line of business logic.
 - **Config the agent must fill**: `PAYMENT_PROVIDER` (`stripe` by default, later `dodo` or `whop`),
   `STRIPE_API_KEY`, `DODO_API_KEY`, `WHOP_API_KEY`. Names only — no value ever enters this repo,
   a config file, a log line, or an error message.
-- **Depends on blocks**: none. This block stands alone on purpose; it is the seam other blocks call,
-  so it must never call them back.
+- `PAYMENTS_RECORDED` — `record_sales.py`'s own idempotency journal (default: `recorded.jsonl`
+  next to it). Not payment config; only a seen-list of session_ids already written to the CRM.
+- **Depends on blocks**: none for `pay.py` itself — it stands alone on purpose, the seam other
+  blocks call, and it must never call them back. **Optional: the `crm` block**, for the revenue
+  ledger — `record_sales.py` (US-1.2) calls `blocks/crm/code/crm.py`'s own CLI to record paid sales
+  as `won` projects. Without the `crm` block installed, `pay.py` still works standalone; only
+  `record_sales.py` needs it.
 
 ## What's in this block
 - `code/pay.py` — the whole seam in one file. `create-link` (title + amount → checkout URL),
   `status --link-id` (prints `paid` or `unpaid`, exit 0 either way), `sales [--json]` (every paid
   sale across the links this tool created). Every HTTP call goes through a single `_request`
   function, which is why the tests run offline and why a new driver is a fill-in, not a refactor.
+- `code/record_sales.py` — US-1.2 glue: reads `pay.py sales --json` and records every new paid
+  sale into `blocks/crm/code/crm.py` (a `won` project under a "Direct sales" company) via crm.py's
+  own CLI, never by importing or editing it. Idempotent on `session_id`; partial failure records
+  everything it can and retries only the failed sale next run. `run [--json]` / `log [--json]`.
 - `tests/test_pay.py` — deterministic pytest suite: driver selection, the documented Stripe call
   sequence and form parameters, amount validation, paid/unpaid logic, `sales --json` shape, and the
   proof that a missing key exits cleanly without opening a socket or echoing a value.
 - `tests/test_pay_live.py` — the same claims against real Stripe **test mode**. Skips entirely
   without an `sk_test_` key, and hard-fails the whole run if it ever sees an `sk_live_` key.
-- `SETUP.md` — install, verify, and the manual test-card checkout walkthrough.
+- `tests/test_record_sales.py` — deterministic pytest suite for `record_sales.py`: records new
+  sales into a real temporary CRM database via crm.py's own CLI, idempotency (second run records
+  nothing new), and partial-failure retry (one bad sale doesn't block the others).
+- `SETUP.md` — install, verify, the manual test-card checkout walkthrough, and recording sales
+  into the CRM.
 
 ## How the agent installs it
 1. Copy `code/` into the founder's `command-center/payments/`.

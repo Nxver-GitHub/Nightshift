@@ -126,6 +126,39 @@ in this repo, and coding a payment rail from memory is how a demo dies on stage.
 that dict should need to change; if it does, the seam has been broken and should be fixed rather
 than worked around.
 
+## 8. Recording sales into the CRM (US-1.2)
+
+`record_sales.py` closes the lane seam from payments to the CRM: it reads `pay.py sales --json`
+and, for every paid sale not already recorded, creates a `won` project under a "Direct sales"
+company in `blocks/crm/code/crm.py` — via crm.py's own CLI, never by importing or editing it. It
+is idempotent: run it as often as you like, and only genuinely new sales get recorded.
+
+```bash
+python3 blocks/payments/code/record_sales.py run
+```
+
+Add `--json` for machine-readable output (`{"recorded": [...], "already_recorded": [...],
+"failed": [...]}`). Exit code is 1 if any individual sale failed to record — everything else in
+that run still succeeded, and the failed sale is retried automatically on the next run.
+
+Config:
+- `PAYMENTS_RECORDED` — this tool's own idempotency journal (default: `recorded.jsonl` next to
+  `record_sales.py`). Never a second source of truth about revenue — the CRM database is that;
+  this file is only a seen-list of session_ids, same role as `labor.py`'s `hires.jsonl`.
+- `CRM_DB` — honoured by `crm.py` itself (this tool inherits it); pass `--crm-db PATH` here to set
+  it per-invocation without exporting the env var.
+
+To dump what's been recorded so far:
+
+```bash
+python3 blocks/payments/code/record_sales.py log --json
+```
+
+**Cron / scheduled-tasks note:** this is designed to be called on a recurring interval from the
+`scheduled-tasks` block (or plain cron) — e.g. every 5–15 minutes — so a sale lands in the CRM
+without anyone remembering to run it by hand. It is safe to run this concurrently with `pay.py`
+create-link/status calls; it never writes to Stripe, only reads `sales`.
+
 ## Safety
 
 `pay.py` only ever **creates payment links and reads payment state**. It cannot refund, capture,
@@ -133,3 +166,6 @@ void, or touch payout settings — there is no such code path. Refunds and live-
 in US-1.1 and will sit behind the approver gate, because a refund is irreversible and irreversible
 gestures need an owner's yes. Keys are read from the environment at call time, never written to
 disk, never printed, never logged.
+
+`record_sales.py` only ever **reads `pay.py sales` and creates CRM companies/projects**. It never
+calls Stripe directly and has no refund, capture, or delete access to anything.

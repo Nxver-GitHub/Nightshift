@@ -23,6 +23,10 @@ __pycache__/
 .taskrunner.lock
 *.log
 
+# Messaging send ledger: holds recipients' phone numbers. The P6 counts are computed from it, so it
+# is real operating state — and personal data that must never reach a public repo.
+blocks/messaging/code/messages.jsonl
+
 # OS / editor noise
 .DS_Store
 Thumbs.db

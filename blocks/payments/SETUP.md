@@ -190,6 +190,29 @@ Add `--json` for machine-readable output (`{"recorded": [...], "already_recorded
 "failed": [...]}`). Exit code is 1 if any individual sale failed to record — everything else in
 that run still succeeded, and the failed sale is retried automatically on the next run.
 
+### Recording more than one rail
+
+`pay.py sales` answers for exactly **one** provider — whichever `PAYMENT_PROVIDER` names. So the
+command above records the active rail and nothing else. With Stripe primary and Whop as a second
+shelf, that means **every Whop sale is invisible to the CRM and the dashboard**. Read both:
+
+```bash
+python3 blocks/payments/code/record_sales.py run --providers stripe,whop
+```
+
+That runs the sales scan once per rail with `PAYMENT_PROVIDER` set per subprocess, and tags each
+journal entry with the rail it came from. Points worth knowing before you put it in a scheduler:
+
+- **A dead rail is not fatal.** Whop with no key fails that rail only; Stripe still records. The
+  run exits 1 so a scheduler notices, and the failed rail appears in `failed` with its provider.
+- **Safe to adopt mid-flight.** Idempotency is keyed on `(provider, session_id)`, and journal
+  entries written before this flag existed carry no provider, so their ids still suppress a match
+  on any rail. Switching an existing cron from `run` to `run --providers …` will not re-record
+  history as duplicate revenue.
+- **Omitting the flag changes nothing.** The single-rail path is byte-for-byte what it was.
+- Rails are validated against `pay.py`'s driver names before any CRM write, so a typo costs you an
+  error message rather than a half-finished run.
+
 Config:
 - `PAYMENTS_RECORDED` — this tool's own idempotency journal (default: `recorded.jsonl` next to
   `record_sales.py`). Never a second source of truth about revenue — the CRM database is that;

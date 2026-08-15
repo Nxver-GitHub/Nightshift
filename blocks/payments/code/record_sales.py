@@ -9,7 +9,7 @@ writes a project into `blocks/crm/code/crm.py` by calling crm.py's OWN CLI as a 
 exact same seam discipline pay.py itself uses for Stripe. `crm.py` is never imported and never
 modified; every mutation goes through its documented argument names.
 
-    record_sales.py run [--json] [--from-file PATH] [--crm-db PATH] [--state PATH]
+    record_sales.py run [--json] [--providers stripe,whop] [--crm-db PATH] [--state PATH]
     record_sales.py log [--json] [--state PATH]
 
 Design notes:
@@ -34,6 +34,18 @@ Design notes:
   it — so it is retried automatically on the next run. Every OTHER sale in the same run still gets
   recorded. The process exits 1 at the end so a scheduler notices, but nothing already-succeeded is
   lost or reprocessed.
+- **One rail per `pay.py sales` call — hence `--providers`.** `pay.py sales` answers for exactly
+  one provider, whichever `PAYMENT_PROVIDER` names. With Stripe primary and Whop as a second shelf,
+  a single call means every Whop sale is invisible to the CRM and the dashboard shows one rail's
+  revenue. `--providers stripe,whop` runs the subprocess once per rail with `PAYMENT_PROVIDER` set
+  in the child environment, and tags each sale with the rail it came from. Omitting the flag keeps
+  the old behaviour exactly: one call, ambient provider, `provider: null` in the journal.
+  A rail that cannot answer (Whop with no key) is a per-rail failure, never fatal to the others —
+  the primary rail keeps recording and the run exits 1 so a scheduler notices.
+- **Idempotency is keyed on (provider, session_id)**, not session_id alone: ids are only unique
+  within a provider, and a cross-rail collision must not make a real sale vanish. Journal entries
+  written before this flag existed carry no provider; their ids suppress a match on ANY rail, so
+  upgrading never re-records history as duplicate revenue. See `already_recorded()`.
 - **`--from-file` is a test/ops hook**, not part of the documented seam: it substitutes a JSON file
   (the same shape as `pay.py sales --json`) for the live subprocess call, so tests never touch the
   network and an operator can replay a saved sales dump if `pay.py` is ever unreachable.
@@ -183,33 +195,97 @@ def resolve_company_id(crm_db_arg, state_path):
 
 
 # ── pay.py side ───────────────────────────────────────────────────────────────
-def load_sales(from_file):
-    """The documented `pay.py sales --json` shape: a list of {link_id, session_id, title,
-    amount_usd, currency, paid_at}. `--from-file` (test/ops hook) substitutes a saved JSON dump for
-    the live subprocess call — same shape, no network."""
+# Mirrors the keys of pay.py's own DRIVERS dict. Duplicated deliberately rather than imported:
+# this file's whole discipline is that it talks to pay.py through its CLI and never imports it
+# (see the module docstring). The cost of the duplication is this list going stale; the check it
+# buys is rejecting a typo'd rail name before a single CRM row is written.
+KNOWN_PROVIDERS = ("stripe", "whop", "dodo")
+
+
+def parse_providers(raw):
+    """`--providers stripe,whop` -> ["stripe", "whop"]. None means the legacy single-rail path."""
+    if raw is None:
+        return None
+    names = [n.strip().lower() for n in raw.split(",") if n.strip()]
+    if not names:
+        raise RecordSalesError("--providers was empty — name at least one rail, e.g. stripe,whop")
+    unknown = [n for n in names if n not in KNOWN_PROVIDERS]
+    if unknown:
+        raise RecordSalesError(
+            f"unknown provider(s) {', '.join(unknown)} — expected from: {', '.join(KNOWN_PROVIDERS)}")
+    seen, ordered = set(), []
+    for n in names:                       # order preserved, duplicates dropped: naming a rail
+        if n not in seen:                 # twice must not double-scan it
+            seen.add(n)
+            ordered.append(n)
+    return ordered
+
+
+def _run_pay_sales(pay_py, provider):
+    """One `pay.py sales --json` call. `provider` None = inherit the ambient PAYMENT_PROVIDER.
+
+    The fan-out lives here, in the environment of the subprocess: `pay.py sales` answers for exactly
+    ONE rail — whichever PAYMENT_PROVIDER names — so reading two rails means running it twice.
+    """
+    child_env = dict(os.environ)
+    if provider is not None:
+        child_env["PAYMENT_PROVIDER"] = provider
+    try:
+        proc = subprocess.run([sys.executable, pay_py, "sales", "--json"],
+                               capture_output=True, text=True, timeout=SUBPROCESS_TIMEOUT,
+                               env=child_env)
+    except OSError as e:
+        raise RecordSalesError(f"could not run pay.py ({pay_py}): {e}")
+    except subprocess.TimeoutExpired:
+        raise RecordSalesError(f"pay.py sales timed out after {SUBPROCESS_TIMEOUT}s")
+    if proc.returncode != 0:
+        raise RecordSalesError(f"pay.py sales failed: {(proc.stderr or proc.stdout).strip()}")
+    try:
+        data = json.loads(proc.stdout)
+    except ValueError as e:
+        raise RecordSalesError(f"pay.py sales returned invalid JSON: {e}")
+    return data
+
+
+def _as_sales_list(data, source):
+    if not isinstance(data, list):
+        raise RecordSalesError(f"{source} JSON must be a list (got {type(data).__name__})")
+    return data
+
+
+def load_sales(from_file, providers=None, pay_py=PAY_PY):
+    """Every paid sale across the rails we were asked to read.
+
+    Returns (sales, failures). Each sale carries a `provider` key: the rail it came from, or None
+    on the legacy single-rail path (which keeps the ambient PAYMENT_PROVIDER and stays byte-for-byte
+    the behaviour it had before this flag existed).
+
+    A rail that fails to answer is collected into `failures` rather than raised — Whop with no key
+    must never cost us a Stripe sale. The run still exits 1 so a scheduler notices.
+    """
     if from_file:
         try:
             with open(from_file, encoding="utf-8") as f:
                 data = json.load(f)
         except (OSError, ValueError) as e:
             raise RecordSalesError(f"--from-file {from_file}: {e}")
-    else:
+        return [dict(s, provider=s.get("provider")) for s in
+                _as_sales_list(data, f"--from-file {from_file}")], []
+
+    if providers is None:                                   # legacy path: one call, ambient rail
+        return [dict(s, provider=None) for s in
+                _as_sales_list(_run_pay_sales(pay_py, None), "pay.py sales")], []
+
+    sales, failures = [], []
+    for provider in providers:
         try:
-            proc = subprocess.run([sys.executable, PAY_PY, "sales", "--json"],
-                                   capture_output=True, text=True, timeout=SUBPROCESS_TIMEOUT)
-        except OSError as e:
-            raise RecordSalesError(f"could not run pay.py ({PAY_PY}): {e}")
-        except subprocess.TimeoutExpired:
-            raise RecordSalesError(f"pay.py sales timed out after {SUBPROCESS_TIMEOUT}s")
-        if proc.returncode != 0:
-            raise RecordSalesError(f"pay.py sales failed: {(proc.stderr or proc.stdout).strip()}")
-        try:
-            data = json.loads(proc.stdout)
-        except ValueError as e:
-            raise RecordSalesError(f"pay.py sales returned invalid JSON: {e}")
-    if not isinstance(data, list):
-        raise RecordSalesError(f"pay.py sales JSON must be a list (got {type(data).__name__})")
-    return data
+            data = _as_sales_list(_run_pay_sales(pay_py, provider), f"pay.py sales [{provider}]")
+        except RecordSalesError as e:
+            print(f"ERROR: rail '{provider}' could not be read: {e}", file=sys.stderr)
+            failures.append({"provider": provider, "error": str(e)})
+            continue
+        sales.extend(dict(s, provider=provider) for s in data)
+    return sales, failures
 
 
 def short_id(session_id):
@@ -241,17 +317,38 @@ def record_one(crm_db_arg, company_id, sale):
 
 
 # ── commands ──────────────────────────────────────────────────────────────────
+def already_recorded(entries):
+    """The idempotency predicate, as a function, because the key changed and the change is subtle.
+
+    Dedupe is on **(provider, session_id)**, not session_id alone: session ids are only unique
+    WITHIN a provider, so two rails could in principle collide and one real sale would silently
+    vanish. Journal entries written before `--providers` existed carry no provider, so their ids
+    also suppress a matching sale on ANY rail — without that, the first run after this upgrade
+    would re-record every historical sale into the CRM as a duplicate.
+    """
+    recorded = [e for e in entries if e.get("status") == "recorded"]
+    pairs = {(e.get("provider"), e.get("session_id")) for e in recorded}
+    legacy_ids = {e.get("session_id") for e in recorded if e.get("provider") is None}
+
+    def seen(sale):
+        sid = sale.get("session_id")
+        return (sale.get("provider"), sid) in pairs or sid in legacy_ids
+
+    return seen
+
+
 def cmd_run(a):
     state_path = resolve_state_path(a.state)
+    providers = parse_providers(a.providers)
     ensure_crm_ready(a.crm_db)
 
-    sales = load_sales(a.from_file)
+    sales, failed = load_sales(a.from_file, providers, a.pay_py or PAY_PY)
     entries = read_state(state_path)
-    already = {e["session_id"] for e in entries if e.get("status") == "recorded"}
+    seen = already_recorded(entries)
 
-    new_sales = [s for s in sales if s.get("session_id") not in already]
+    new_sales = [s for s in sales if not seen(s)]
 
-    recorded, failed = [], []
+    recorded = []
     if new_sales:
         company_id = resolve_company_id(a.crm_db, state_path)
         for sale in new_sales:
@@ -260,12 +357,13 @@ def cmd_run(a):
                 print(f"ERROR: could not record sale {sale.get('session_id')}: {err}",
                       file=sys.stderr)
                 failed.append({"session_id": sale.get("session_id"), "link_id": sale.get("link_id"),
-                                "error": err})
+                                "provider": sale.get("provider"), "error": err})
                 continue
             entry = {
                 "ts": now_iso(),
                 "session_id": sale.get("session_id"),
                 "link_id": sale.get("link_id"),
+                "provider": sale.get("provider"),   # provenance: which rail this sale came from
                 "amount_usd": sale.get("amount_usd"),
                 "currency": sale.get("currency"),
                 "crm_project_id": crm_project_id,
@@ -274,7 +372,7 @@ def cmd_run(a):
             append_state_entry(state_path, entry)   # only AFTER the CRM write succeeded
             recorded.append(entry)
 
-    skipped = sorted(already & {s.get("session_id") for s in sales})
+    skipped = sorted({s.get("session_id") for s in sales if seen(s)})
 
     if a.json:
         print(json.dumps({"recorded": recorded, "already_recorded": skipped, "failed": failed},
@@ -316,8 +414,13 @@ def build_parser():
                     help="passed through to crm.py as --db (else crm.py honours $CRM_DB)")
     s.add_argument("--state", default=None,
                     help="override this block's state file (else $PAYMENTS_RECORDED or default)")
-    # Test/ops hook, not part of the documented seam — see module docstring.
+    s.add_argument("--providers", default=None,
+                    help=f"comma-separated rails to read, e.g. stripe,whop "
+                         f"(from: {', '.join(KNOWN_PROVIDERS)}). Omit to read the single rail named "
+                         f"by $PAYMENT_PROVIDER, as before.")
+    # Test/ops hooks, not part of the documented seam — see module docstring.
     s.add_argument("--from-file", default=None, help=argparse.SUPPRESS)
+    s.add_argument("--pay-py", default=None, help=argparse.SUPPRESS)
     s.set_defaults(f=cmd_run)
 
     s = sub.add_parser("log", help="dump this block's recorded-sales journal")

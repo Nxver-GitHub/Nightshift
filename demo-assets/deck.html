@@ -56,13 +56,21 @@
   .nav { position:fixed; bottom:1.1rem; right:1.4rem; color:var(--muted); font-size:.8rem;
          letter-spacing:.06em; }
   .hint { position:fixed; bottom:1.1rem; left:1.4rem; color:var(--line); font-size:.75rem; }
+  /* Print: redefine the tokens rather than patching individual rules. Every rule already reads
+     from a var, so one block flips the whole deck to ink-on-paper. Patching rule by rule silently
+     misses anything with higher specificity — p.body beats .muted, and printed near-white on
+     white. */
   @media print {
-    body { overflow:visible; background:#fff; color:#000; }
+    :root { --bg:#fff; --ink:#111; --muted:#4a4a55; --line:#c9c9d2;
+            --accent:#4b3fb0; --ok:#0d7a5c; --warn:#8a5a00; --fill:#8a5a00; }
+    body { overflow:visible; background:var(--bg); color:var(--ink); }
     .slide { display:flex !important; position:relative; inset:auto; page-break-after:always;
              height:100vh; }
     .nav, .hint { display:none; }
-    pre { background:#f4f4f6; color:#000; }
-    .muted, .statlabel, .who { color:#555; }
+    pre { background:#f3f3f7; color:#1a1a22; }
+    /* inline colours on the two emphasised spans have to be forced back to ink */
+    b[style], span[style] { color:var(--ink) !important; }
+    .fill { color:var(--fill) !important; }
   }
 </style>
 </head>

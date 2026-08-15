@@ -9,6 +9,7 @@ or run via:
 """
 import http.server
 import functools
+import json
 import os
 import shutil
 import socket
@@ -23,6 +24,12 @@ pw = pytest.importorskip("playwright.sync_api", reason="pip install pytest-playw
 HERE = os.path.dirname(os.path.abspath(__file__))
 BLOCK = os.path.dirname(HERE)
 SITE = os.path.join(BLOCK, "site")
+
+
+def product() -> dict:
+    """The listing is the source of truth — tests assert against it, never against a hardcoded copy."""
+    with open(os.path.join(SITE, "product.json"), encoding="utf-8") as f:
+        return json.load(f)
 
 
 def _free_port() -> int:
@@ -124,8 +131,20 @@ def test_stub_checkout_simulate_lands_on_thanks_with_delivery_link(page, site_se
     page.wait_for_selector("#delivery-link")
     delivery = page.locator("#delivery-link")
     assert delivery.is_visible()
-    assert delivery.get_attribute("href") == "#delivery-pending"
+    # Read the expected href from product.json rather than hardcoding it: the delivery target moves
+    # (placeholder -> real ZIP) and the test's job is that the page honours the listing.
+    assert delivery.get_attribute("href") == product()["delivery_url"]
     assert "autonomous agents" in page.content()
+
+
+def test_delivery_url_is_downloadable(page, site_server):
+    """(f) the delivery target named by product.json actually resolves — no dead download link."""
+    url = product()["delivery_url"]
+    if url.startswith("#"):
+        pytest.skip("delivery_url is still a placeholder anchor, nothing to fetch")
+    resp = page.request.get(site_server.base_url + "/" + url.lstrip("/"))
+    assert resp.status == 200, f"delivery_url {url!r} returned {resp.status}"
+    assert len(resp.body()) > 0
 
 
 def test_product_json_fetch_failure_shows_error(page, broken_site_server):

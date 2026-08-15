@@ -55,3 +55,7 @@ blocks/payments/tests/whop-live-dumps/
 # runtime lock files (fcntl coordination, never content)
 *.jsonl.lock
 blocks/taskrunner/code/tasks.json.lock
+
+# Brand/design working files — spec, render pipeline, generated art, patches.
+# Kept local until the design lands in a real surface; not part of the kit.
+/brand-kit.local/

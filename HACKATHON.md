@@ -66,6 +66,18 @@ NetworkX — nodes carry `label`, `source_file`, `source_location`, `community`;
 
 ---
 
+## Positioning — what the product IS (both of us pitch this, identically)
+
+**This is not a company-files generator — files are copyable and have no moat. The product is the
+authority layer: giving an agent a company credit card with rules written on it (`policy.md`), a
+tamper-evident ledger of every decision (`decisions.jsonl`), and a human-judgment supply chain for
+when the rules run out (Terac escalation).** Stripe won by absorbing the scary part of payments
+behind seven lines of code; we absorb the scary part of agent autonomy behind one gate. The brain,
+the blocks, the markdown — that's runtime state, the way Liquid templates are Shopify's state.
+Demo opens with the fear ("would you give an agent your credit card?"), then the primitive
+(gate → policy → ledger → escalation), then the live transaction. The founding interview is not
+file generation — it is the onboarding wizard of an agent-authority platform.
+
 ## The thesis (say this in one breath)
 
 Project Sunday is a kit that installs an agent-run company. Its architecture has one deliberate

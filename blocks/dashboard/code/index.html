@@ -41,6 +41,32 @@
         color:var(--ink); margin:0; max-height:340px; overflow:auto; }
   .empty { color:var(--muted); font-size:13px; }
   a { color:var(--accent); }
+
+  /* Decision ledger — the audit trail. Built for skimming: the headline numbers first, then one
+     row per decision, verdict on the left, who answered on the right. */
+  .strip { display:flex; gap:26px; flex-wrap:wrap; background:var(--card); border:1px solid var(--line);
+           border-radius:12px; padding:14px 18px; margin-bottom:12px; }
+  .stat { display:flex; flex-direction:column; gap:1px; }
+  .stat .n { font-size:22px; font-weight:600; line-height:1.15; }
+  .stat .l { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  .stat.paid .n { color:var(--accent); }
+  .dec { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 12px;
+         margin-bottom:8px; display:grid; grid-template-columns:96px 1fr auto; gap:14px; align-items:start; }
+  @media (max-width:700px){ .dec { grid-template-columns:1fr; } }
+  .dec.human { border-color:var(--accent); }
+  .v { font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.03em; text-align:center;
+       padding:2px 8px; border-radius:20px; border:1px solid var(--line); color:var(--muted); }
+  .v.approve { color:var(--ok); border-color:var(--ok); }
+  .v.reject { color:var(--high); border-color:var(--high); }
+  .v.escalated { color:var(--wait); border-color:var(--wait); }
+  .dec .q { font-size:14px; }
+  .dec .why { font-size:12px; color:var(--muted); margin-top:3px; }
+  .dec .right { text-align:right; white-space:nowrap; }
+  .dec .when { font-size:12px; color:var(--muted); margin-top:4px; }
+  .who { font-size:11px; padding:1px 7px; border-radius:20px; border:1px solid var(--line);
+         color:var(--muted); display:inline-block; }
+  .who.human { color:var(--accent); border-color:var(--accent); font-weight:600; }
+  .clause { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:11px; }
 </style>
 </head>
 <body>
@@ -50,6 +76,10 @@
   <span class="sub" style="margin-left:auto"><a href="#" onclick="load();return false">refresh</a></span>
 </header>
 <main>
+  <section>
+    <h2>Decision ledger — who answered the gate</h2>
+    <div id="ledger"><span class="empty">loading…</span></div>
+  </section>
   <section>
     <h2>Tasks</h2>
     <div class="board" id="board"><span class="empty">loading…</span></div>
@@ -72,8 +102,56 @@ function esc(s){ return (s||"").replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">
 
 async function jget(u){ try { return await (await fetch(u)).json(); } catch(e){ return {available:false}; } }
 
+// ── decision ledger ───────────────────────────────────────────────────────────────────────────
+const VERDICTS = ["approve","reject","escalated"];
+function usd(x){ const n = Number(x); return isFinite(n) ? "$"+n.toFixed(2) : ""; }
+function stat(n, l, cls){ return '<div class="stat '+(cls||"")+'"><span class="n">'+n+'</span>'
+                               + '<span class="l">'+l+'</span></div>'; }
+
+function renderLedger(d){
+  const el = document.getElementById("ledger");
+  if(!d.available){
+    el.innerHTML = '<span class="empty">No decision ledger — set APPROVER_LEDGER to the '
+                 + 'approver’s decisions.jsonl.</span>';
+    return;
+  }
+  const s = d.summary||{}, mode = s.by_mode||{}, ver = s.by_verdict||{};
+  let h = '<div class="strip">'
+        + stat(s.total||0, "decisions")
+        + stat(mode.agent||0, "answered by policy")
+        + stat(mode.human||0, "bought from a human", "paid")
+        + stat(usd(s.human_cost_usd||0), "human judgment, expensed", "paid")
+        + stat(ver.escalated||0, "escalated")
+        + '</div>';
+
+  // Newest first: a judge looking at this mid-run wants the last thing that happened.
+  const rows = (d.decisions||[]).slice().reverse();
+  h += rows.length ? rows.map(e=>{
+    const v = String(e.verdict||"unknown").toLowerCase();
+    const refs = e.policy_clauses_cited||[];
+    const why = (refs.length ? 'cites <span class="clause">'+esc(refs.join(", "))+'</span> — ' : '')
+              + esc(e.reason||"");
+    const human = e.mode === "human";
+    const who = human
+      ? '<span class="who human">hired human'+(e.provider ? " · "+esc(e.provider) : "")
+        + (e.cost_usd!=null ? " · "+usd(e.cost_usd) : "")+'</span>'
+      : '<span class="who">agent</span>';
+    return '<div class="dec'+(human?" human":"")+'">'
+         + '<span class="v '+(VERDICTS.includes(v)?v:"")+'">'+esc(v)+'</span>'
+         + '<div><div class="q">'+esc(e.question||e.task_id||"(no question recorded)")+'</div>'
+         + '<div class="why">'+why+'</div></div>'
+         + '<div class="right">'+who+'<div class="when">'+esc(e.ts||"")+'</div></div>'
+         + '</div>';
+  }).join("") : '<span class="empty">No decisions recorded yet.</span>';
+
+  if(s.total > rows.length) h += '<div class="empty">showing the newest '+rows.length+' of '+s.total+'.</div>';
+  if(s.malformed_lines) h += '<div class="empty">'+s.malformed_lines+' unreadable ledger line(s) skipped.</div>';
+  el.innerHTML = h;
+}
+
 async function load(){
   document.getElementById("clock").textContent = new Date().toLocaleString();
+  renderLedger(await jget("/api/decisions"));
   const t = await jget("/api/tasks");
   const board = document.getElementById("board");
   if(!t.available){ board.innerHTML = '<span class="empty">No kanban found — set TASKRUNNER_TASKS.</span>'; }

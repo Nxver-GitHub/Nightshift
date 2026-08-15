@@ -30,7 +30,8 @@ Usage:  python3 labor.py <command> [options]
 
 Config (names only — values live in the environment, never in this repo):
   LABOR_PROVIDER    manual (default) | terac
-  TERAC_API_KEY     reserved for the terac driver; read at call time, never logged
+  TERAC_API_KEY     the terac driver's key; read at call time, never logged, never in errors
+  TERAC_TASK_URL    participant-facing context page for a terac hire (default: the public repo)
   APPROVER_LEDGER   the approver's decisions.jsonl — read for escalations, appended on collect
   APPROVER_POLICY   the written policy; its frontmatter carries the spend ceiling that gates a hire
   TASKRUNNER_TASKS  the kanban shared with the taskrunner
@@ -41,8 +42,11 @@ import datetime
 import fcntl
 import json
 import os
+import re
 import sys
 import time
+import urllib.error
+import urllib.request
 from typing import Optional, TextIO, Tuple
 
 VERDICTS = ["approve", "reject"]
@@ -51,6 +55,15 @@ LOCK_SLEEP = 0.1
 DEFAULT_PROVIDER = "manual"
 CEILING_KEY = "per_action_spend_ceiling_usd"
 ANSWER_SUFFIX = " [via hired expert]"    # every hired answer is labelled ON the card, not just in a log
+
+# Terac External API v2 (shapes fetched from terac.com/docs/developers, 2026-08-15 — beta).
+TERAC_API_BASE = "https://terac.com/api/external/v2"
+TERAC_PROJECT_NAME = "Nightshift escalations"
+TERAC_HTTP_TIMEOUT = 30
+# Participant-facing context page for the task step. The QUESTION itself travels in the two
+# screening questions below; the task is "read the context, then answer" — so the URL just has
+# to be real and public. Overridable for a richer context page (e.g. the live dashboard).
+TERAC_TASK_URL_DEFAULT = "https://github.com/Nxver-GitHub/Nightshift"
 
 
 class LaborError(Exception):
@@ -92,6 +105,33 @@ def now() -> str:
 def fmt_usd(value: float) -> str:
     """12.0 -> '12', 12.50 -> '12.5'. The journal line is read by a human, not parsed."""
     return f"{value:g}"
+
+
+_ANSI_RE = re.compile(r"\x1b\[[0-9;]*[A-Za-z]|\x1b.")
+REASONING_CAP = 1500
+
+def sanitize_text(text: str, cap: int = REASONING_CAP) -> str:
+    """Strip ANSI escapes and C0 control chars (keep newline/tab) and cap the length.
+
+    Everything passing through here crossed a trust boundary — an outside human's words, or
+    question text that may have originated in an inbound email — and will be re-read by
+    terminals, the dashboard, and a headless LLM taskrunner. None of those may be steered by
+    control sequences or drowned by an unbounded field. (Content-level injection is handled
+    where the text is CONSUMED: the taskrunner tick treats answers as data, never instructions.)
+    """
+    text = _ANSI_RE.sub("", text or "")
+    text = "".join(ch for ch in text if ch in "\n\t" or ord(ch) >= 32)
+    text = text.strip()
+    if len(text) > cap:
+        text = text[:cap].rstrip() + " …[truncated]"
+    return text
+
+
+# What must never be broadcast to a public audience: anything credential-shaped, and email
+# addresses (a hire's question text can originate in an inbound customer email).
+_LEAKY_RE = re.compile(
+    r"(sk_live_|rk_live_|sk_test_|rk_test_|sk-ant-|whsec_|ss_live_|api[_-]?key\s*[:=]\s*\S|"
+    r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})", re.IGNORECASE)
 
 
 # ── the money gate ────────────────────────────────────────────────────────────────────────────
@@ -217,12 +257,12 @@ def manual_submit(task_id: str, question: str, context: str, cost: float) -> Non
     """REAL tonight, and the permanent fallback when any API is down. The 'API' is a human relay."""
     print(f"\nHIRE OPEN — {task_id}   (${fmt_usd(cost)}, one bounded judgment)")
     print("\nRelay this to any human expert. They answer the question; they do NOT do the task.\n")
-    print("  QUESTION")
-    for line in (question or "(no question text)").splitlines() or [""]:
+    print("  QUESTION")   # sanitized: question text can originate in an inbound email
+    for line in (sanitize_text(question) or "(no question text)").splitlines() or [""]:
         print(f"    {line}")
     if context:
         print("\n  CONTEXT")
-        for line in context.splitlines():
+        for line in sanitize_text(context).splitlines():
             print(f"    {line}")
     print("\n  They must return exactly one verdict plus one paragraph of reasoning.")
     print("  Bring it back with:\n")
@@ -249,18 +289,190 @@ def manual_collect(task_id: str, answer: Optional[str], cost: float) -> Tuple[st
     return verdict, reasoning
 
 
-# Terac offers two integration surfaces (HACKATHON.md): a REST API and an MCP server. Either one
-# fills the two functions below — REST from here directly, MCP by having the labor skill call the
-# tools and hand the result to `collect --answer`. Structure is ready; only the calls are missing.
-def _terac_unavailable(*_args, **_kwargs):
-    raise LaborError(
-        "terac driver awaits TERAC_API_KEY + API docs (sponsor Slack, 8:30am) — structure ready, "
-        "fill submit/collect")
+# ── terac driver — hire a verified human through Terac's External API v2 ──────────────────────
+# The design maps Terac's study machinery onto "one bounded judgment":
+#   * The QUESTION rides in two screening questions — a pick-one verdict (Approve/Reject) and a
+#     free-text reasoning field. Their docs bless screeners for "freeform responses", and every
+#     submission carries `screening_answers` back, so the answer channel needs no webhook, no
+#     hosted form, no second state store.
+#   * ONE participant, unrestricted audience (their own guidance: general population is fastest),
+#     minimum recruitment window. Terac verifies identity; we buy the judgment.
+#   * MONEY: Terac prices the study itself (`pricing.total_cost_cents` on the draft). The draft is
+#     created UNLAUNCHED, its real price is checked against our --cost (already gated by P2), and
+#     an over-priced draft is deleted, not negotiated. Nothing can spend more than the ceiling.
+def _terac_key() -> str:
+    key = os.environ.get("TERAC_API_KEY", "").strip()
+    if not key:
+        raise LaborError(
+            "TERAC_API_KEY is not set — the terac driver cannot open or collect a hire without it. "
+            "Set it, or use LABOR_PROVIDER=manual (the permanent fallback).")
+    return key
+
+
+def _terac_request(method: str, path: str, payload: Optional[dict] = None) -> dict:
+    """The ONLY function that talks to Terac — tests replace this one symbol.
+    Every POST carries a JSON body (their API 415s a bodyless POST, per their webhook guide)."""
+    body = json.dumps(payload).encode() if payload is not None else (
+        b"{}" if method == "POST" else None)
+    req = urllib.request.Request(TERAC_API_BASE + path, method=method, data=body)
+    req.add_header("Authorization", f"Bearer {_terac_key()}")
+    if body is not None:
+        req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, timeout=TERAC_HTTP_TIMEOUT) as resp:
+            raw = resp.read()
+    except urllib.error.HTTPError as e:
+        try:
+            detail = json.loads(e.read().decode() or "{}")
+        except ValueError:
+            detail = {}
+        msg = (detail.get("error") or {}).get("message") or detail.get("message") or e.reason
+        # The API's own words reach the operator; the Authorization header never does.
+        raise LaborError(f"Terac API {e.code} on {method} {path}: {msg}")
+    except urllib.error.URLError as e:
+        raise LaborError(f"network error reaching Terac: {e.reason}")
+    return json.loads(raw) if raw else {}
+
+
+def _terac_project_id() -> str:
+    """One project holds every escalation — the audit story is one queue, not a project per hire."""
+    listing = _terac_request("GET", "/projects")
+    projects = listing.get("data", listing) if isinstance(listing, dict) else listing
+    for p in projects or []:
+        if p.get("name") == TERAC_PROJECT_NAME:
+            return p["id"]
+    return _terac_request("POST", "/projects", {"name": TERAC_PROJECT_NAME})["id"]
+
+
+def terac_submit(task_id: str, question: str, context: str, cost: float) -> dict:
+    # This text goes VERBATIM to an unrestricted public audience. Anything credential-shaped or
+    # personally addressed is refused outright — redaction is the submitter's job, not this
+    # driver's guess (security review H2).
+    leak = _LEAKY_RE.search(f"{question}\n{context}")
+    if leak:
+        raise LaborError(
+            "the question/context contains what looks like a credential or an email address "
+            f"('{leak.group(0)[:12]}…') — refusing to broadcast it to a public audience. "
+            "Redact it and re-submit.")
+    description = (
+        "The company Nightshift needs ONE professional judgment call. You are the substitute "
+        "decision-maker for a single decision — you judge, you do not do any work.\n\n"
+        f"THE DECISION UNDER REVIEW:\n{question or '(see context)'}\n"
+        + (f"\nCONTEXT:\n{context}\n" if context else "")
+        + "\nAnswer the two application questions: your verdict (Approve or Reject) and one "
+          "paragraph of reasoning. Your reasoning enters the company's public audit ledger "
+          "verbatim. Then open the linked page for background and complete the task step.")
+
+    draft = _terac_request("POST", "/opportunities", {
+        "title": "One professional judgment call (verdict + reasoning)",
+        "internal_title": f"escalation {task_id}",
+        "description": description,
+        "project_id": _terac_project_id(),
+        "num_participants": 1,
+        "business_type": "b2b",
+        "unrestricted_audience": True,   # their guidance: general population fills fastest
+        "expected_days_to_complete": 5,  # API minimum; completion is usually far faster
+        # review_type: "auto_approve" is the only value their beta docs document, and it means
+        # Terac may release the payout on submission — BEFORE collect validates the answer. The
+        # loss is bounded (the price gate below caps it at one authorized judgment), never
+        # unbounded — but it is not verify-then-pay. A manual-review slug clearly exists
+        # (submissions have an awaiting_review status); the docs don't name it, and inventing
+        # API values is banned here. Override via TERAC_REVIEW_TYPE the moment Terac confirms it.
+        "tasks": [{"sequence": 1, "task_type": "interview",
+                   "review_type": os.environ.get("TERAC_REVIEW_TYPE", "auto_approve"),
+                   "task_url": os.environ.get("TERAC_TASK_URL", TERAC_TASK_URL_DEFAULT),
+                   "duration_minutes": 5}],
+        "screening_questions": [
+            {"key": "verdict",
+             "text": "Your professional verdict on the decision described: should the company proceed?",
+             "pick": "one",
+             "answers": [{"text": "Approve", "qualify_logic": "may"},
+                         {"text": "Reject", "qualify_logic": "may"}]},
+            {"key": "reasoning",
+             "text": "In one paragraph: why? (This goes into the company's audit ledger verbatim.)",
+             "pick": "one",
+             "answers": [{"text": "My reasoning", "qualify_logic": "may",
+                          "allow_free_text": True}]},
+        ],
+    })
+    oid = draft.get("id")
+    if not oid:
+        raise LaborError("Terac returned a draft without an id — refusing to continue.")
+
+    # THE PRICE CHECK. --cost passed the P2 ceiling upstream; now Terac's actual price must fit
+    # under --cost. Unpriced is treated as over-priced: a spend this code cannot read is a spend
+    # this code must not make.
+    def _delete_draft():
+        try:
+            _terac_request("DELETE", f"/opportunities/{oid}")
+            return "draft deleted"
+        except LaborError as e:   # an unlaunched draft costs nothing; report, don't mask the refusal
+            return f"draft could NOT be deleted ({e}) — remove opportunity {oid} in the dashboard"
+
+    cents = ((draft.get("pricing") or {}).get("total_cost_cents"))
+    if cents is None:
+        raise LaborError(f"Terac draft came back unpriced — {_delete_draft()}, nothing launched.")
+    priced = cents / 100.0
+    if priced > cost:
+        raise LaborError(
+            f"Terac priced this judgment at ${fmt_usd(priced)}, over the authorized "
+            f"${fmt_usd(cost)} — {_delete_draft()}, nothing launched. Re-submit with --cost "
+            f"{fmt_usd(priced)} if the policy ceiling allows it.")
+
+    _terac_request("POST", f"/opportunities/{oid}/launch")
+    print(f"HIRE OPEN — {task_id} on Terac (opportunity {oid}, priced ${fmt_usd(priced)}, "
+          f"1 verified human). Collect with: labor.py collect --id {task_id}")
+    return {"opportunity_id": oid, "priced_usd": priced}
+
+
+def terac_collect(task_id: str, answer: Optional[str], cost: float) -> Tuple[str, str]:
+    if answer is not None:
+        raise LaborError(
+            "the terac driver reads the expert's answer from the Terac API — drop --answer "
+            "(that flag belongs to the manual driver).")
+    hire = next((h for h in reversed(read_hires())
+                 if h.get("task_id") == task_id and h.get("status") == "submitted"), None)
+    oid = (hire or {}).get("opportunity_id")
+    if not oid:
+        raise LaborError(
+            f"the open hire for {task_id} has no opportunity_id — it was not opened by the terac "
+            f"driver. Collect it with the driver that opened it (LABOR_PROVIDER=manual).")
+
+    subs = _terac_request("GET", f"/opportunities/{oid}/submissions").get("data") or []
+    done = [s for s in subs if s.get("status") in ("approved", "awaiting_review")]
+    if not done:
+        counts = {}
+        for s in subs:
+            counts[s.get("status", "?")] = counts.get(s.get("status", "?"), 0) + 1
+        raise LaborError(
+            f"no completed submission yet on opportunity {oid} — the expert may still be working "
+            f"(current: {counts or 'no applicants yet'}). Try again later; nothing written.")
+
+    sub = done[0]
+    answers = {a.get("key"): a.get("answer") or [] for a in sub.get("screening_answers") or []}
+    verdict_raw = next((v for v in answers.get("verdict", []) if str(v).strip()), "")
+    verdict = str(verdict_raw).strip().lower()
+    # Free-text screeners echo the option label alongside the typed text; keep only the words.
+    reasoning = " ".join(str(v).strip() for v in answers.get("reasoning", [])
+                         if str(v).strip() and str(v).strip().lower() != "my reasoning").strip()
+    if verdict not in VERDICTS:
+        raise LaborError(
+            f"submission {sub.get('id')} carries no readable verdict (got '{verdict_raw}') — "
+            f"not guessing what the expert meant. Review it in the Terac dashboard.")
+    if not reasoning:
+        raise LaborError(
+            f"submission {sub.get('id')} has a verdict but no reasoning — the reasoning goes into "
+            f"the ledger; refusing to record a bare verdict. Review it in the Terac dashboard.")
+
+    # Approving RELEASES THE PAYOUT — the moment the company actually pays its hired human.
+    if sub.get("status") == "awaiting_review":
+        _terac_request("POST", f"/submissions/{sub['id']}/approve")
+    return verdict, reasoning
 
 
 DRIVERS = {
     "manual": {"submit": manual_submit, "collect": manual_collect},
-    "terac": {"submit": _terac_unavailable, "collect": _terac_unavailable},
+    "terac": {"submit": terac_submit, "collect": terac_collect},
 }
 
 
@@ -311,7 +523,7 @@ def cmd_pending(a: argparse.Namespace) -> int:
         tail = "  [hire open]" if r["hire_status"] else ""
         print(f"  {r['id']}  {r['title']}{tail}")
         print(f"      escalated {r['escalated_at'] or '—'}: {r['escalation_reason']}")
-        head = r["question"].splitlines()[0] if r["question"] else ""
+        head = sanitize_text(r["question"]).splitlines()[0] if r["question"] else ""
         print(f"      asks: {head}")
     print()
     return 0
@@ -338,20 +550,30 @@ def cmd_submit(a: argparse.Namespace) -> int:
         raise LaborError(
             f"task {tid} is '{t.get('status')}' with no unanswered question — there is nothing for "
             f"an expert to decide. Nothing spent.")
-    if any(h.get("task_id") == tid and h.get("status") == "submitted" for h in read_hires()):
-        raise LaborError(
-            f"a hire is already open for {tid} — one bounded judgment per escalation. "
-            f"Collect it (labor.py collect --id {tid}) before opening another.")
+    # The check-then-append below must be one atomic step: two concurrent submits that both pass
+    # the "already open" check would buy the same judgment twice — each under the ceiling,
+    # together over it. Same lock discipline as the kanban (security review M3).
+    lock_fd = acquire_lock(resolve_hires() + ".lock")
+    try:
+        if any(h.get("task_id") == tid and h.get("status") == "submitted" for h in read_hires()):
+            raise LaborError(
+                f"a hire is already open for {tid} — one bounded judgment per escalation. "
+                f"Collect it (labor.py collect --id {tid}) before opening another.")
 
-    question = (t.get("question") or {}).get("text", "")
-    provider, driver = get_driver()
-    context = (a.context or "").strip()
+        question = (t.get("question") or {}).get("text", "")
+        provider, driver = get_driver()
+        context = (a.context or "").strip()
 
-    # Driver first, record second: a driver that cannot accept the hire must not leave a phantom
-    # open hire in the state file blocking every later attempt.
-    driver["submit"](tid, question, context, cost)
-    append_hire({"ts": now(), "task_id": tid, "question": question, "provider": provider,
-                 "cost_usd": cost, "status": "submitted", "answer": None, "answered_at": None})
+        # Driver first, record second: a driver that cannot accept the hire must not leave a
+        # phantom open hire in the state file blocking every later attempt. A driver may return
+        # extra fields it needs at collect time (terac: opportunity_id, the price Terac set).
+        extra = driver["submit"](tid, question, context, cost) or {}
+        append_hire({"ts": now(), "task_id": tid, "question": question, "provider": provider,
+                     "cost_usd": cost, "status": "submitted", "answer": None, "answered_at": None,
+                     **extra})
+    finally:
+        fcntl.flock(lock_fd, fcntl.LOCK_UN)
+        lock_fd.close()
     print(f"OK {tid} — hire submitted to {provider} at ${fmt_usd(cost)} "
           f"(ceiling ${fmt_usd(ceiling)}). Task untouched until the answer comes back.")
     return 0
@@ -367,10 +589,15 @@ def cmd_collect(a: argparse.Namespace) -> int:
             f"no open hire for {tid} — submit one first (labor.py submit --id {tid} --cost N).")
 
     provider, driver = get_driver()
-    cost = float(hire.get("cost_usd") or 0)
+    # The ledger records what was actually CHARGED, not what was authorized: terac's real price
+    # (priced_usd) beats the --cost ceiling amount when the two differ (security review M1).
+    cost = float(hire.get("priced_usd") or hire.get("cost_usd") or 0)
     # Obtain the judgment BEFORE taking the lock: a human (or a network) must never be the reason
     # the taskrunner's kanban is held.
     verdict, reasoning = driver["collect"](tid, a.answer, cost)
+    # An outside human's words are about to land on a live card, in the ledger, in terminals, and
+    # in a headless LLM's context — strip control sequences and cap the size at this choke point.
+    reasoning = sanitize_text(reasoning)
 
     tasks_path = resolve_tasks(a.tasks)
     lock_fd = acquire_lock(tasks_path + ".lock")
@@ -443,7 +670,7 @@ def cmd_log(a: argparse.Namespace) -> int:
     for h in hires:
         print(f"  {h.get('ts')}  {h.get('task_id')}  [{h.get('status')}]  "
               f"{h.get('provider')}  ${fmt_usd(float(h.get('cost_usd') or 0))}  "
-              f"{h.get('answer') or '—'}")
+              f"{sanitize_text(h.get('answer') or '—')}")
     return 0
 
 

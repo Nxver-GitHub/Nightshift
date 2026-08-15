@@ -71,6 +71,8 @@ def clean_env(monkeypatch):
     """No provider and no key leak in from the developer's shell into any test."""
     monkeypatch.delenv("PAYMENT_PROVIDER", raising=False)
     monkeypatch.delenv("STRIPE_API_KEY", raising=False)
+    monkeypatch.delenv("WHOP_API_KEY", raising=False)
+    monkeypatch.delenv("WHOP_COMPANY_ID", raising=False)
 
 
 def run(monkeypatch, recorder, argv):
@@ -90,7 +92,7 @@ def test_explicit_stripe_provider(monkeypatch):
     assert pay.get_driver()[0] == "stripe"
 
 
-@pytest.mark.parametrize("provider", ["dodo", "whop"])
+@pytest.mark.parametrize("provider", ["dodo"])
 def test_stub_drivers_exit_1_with_the_handover_message(monkeypatch, capsys, provider):
     monkeypatch.setenv("PAYMENT_PROVIDER", provider)
     recorder = Recorder()
@@ -328,3 +330,143 @@ def test_flatten_uses_stripe_bracket_notation():
 def _code(exc):
     """sys.exit("message") sets code to the string; the process still exits 1."""
     return 1 if isinstance(exc.value.code, str) else exc.value.code
+
+
+# ── whop driver (US-3.1) — same offline discipline, monkeypatching pay._whop_request ──────────
+class WhopRecorder:
+    """Stands in for pay._whop_request. Records (method, path, params, query), replays canned."""
+
+    def __init__(self, responses=None):
+        self.calls = []
+        self.responses = responses or {}
+
+    def __call__(self, method, path, params=None, query=None):
+        self.calls.append((method, path, params or {}, query or {}))
+        value = self.responses.get((method, path))
+        if callable(value):
+            return value(params or {}, query or {})
+        if value is None:
+            raise AssertionError(f"no canned response for {method} {path}")
+        return value
+
+
+def whop_payment(pid, status, total=19.0, config="ch_TEST", paid_at="2026-08-15T20:00:00Z",
+                 managed=True):
+    meta = {"managed_by": "nightshift-payments", "title": "Nightshift Playbook"} if managed else {}
+    return {"id": pid, "status": status, "total": total, "currency": "usd",
+            "checkout_configuration_id": config, "paid_at": paid_at,
+            "created_at": "2026-08-15T19:59:00Z", "metadata": meta}
+
+
+def whop_page(items, has_next=False, end_cursor=None):
+    return {"data": items, "page_info": {"has_next_page": has_next, "end_cursor": end_cursor}}
+
+
+def run_whop(monkeypatch, recorder, argv):
+    monkeypatch.setenv("PAYMENT_PROVIDER", "whop")
+    monkeypatch.setenv("WHOP_COMPANY_ID", "biz_TEST")
+    monkeypatch.setattr(pay, "_whop_request", recorder)
+    return pay.main(argv)
+
+
+def whop_config_response(purchase_url="/checkout/plan_TEST?session=ch_TEST"):
+    return {("POST", "/checkout_configurations"): {
+        "id": "ch_TEST", "mode": "payment", "currency": "usd",
+        "plan": {"id": "plan_TEST", "plan_type": "one_time",
+                 "product": {"id": "prod_TEST", "title": "Nightshift Playbook"}},
+        "purchase_url": purchase_url, "metadata": {}}}
+
+
+def test_whop_create_link_one_call_inline_plan(monkeypatch, capsys):
+    recorder = WhopRecorder(whop_config_response())
+    run_whop(monkeypatch, recorder, ["create-link", "--title", "Nightshift Playbook",
+                                     "--amount", "19", "--currency", "USD"])
+    # One call — the checkout-configuration endpoint creates plan and product on the fly.
+    assert [(m, p) for m, p, _, _ in recorder.calls] == [("POST", "/checkout_configurations")]
+    body = recorder.calls[0][2]
+    assert body["mode"] == "payment"
+    assert body["plan"]["company_id"] == "biz_TEST"        # live API 400s without it
+    assert body["plan"]["plan_type"] == "one_time"
+    # required by the live API; stable slug = find-or-create, so re-listing never duplicates
+    assert body["plan"]["product"]["external_identifier"] == "nightshift-payments-nightshift-playbook"
+    assert body["plan"]["initial_price"] == 19.0        # cents back to major units, once
+    assert body["plan"]["renewal_price"] == 0
+    assert body["plan"]["billing_period"] is None
+    assert body["plan"]["currency"] == "usd"            # normalised to lowercase ISO
+    assert body["plan"]["product"]["title"] == "Nightshift Playbook"
+    assert body["metadata"]["managed_by"] == "nightshift-payments"
+
+    out = capsys.readouterr().out
+    # purchase_url comes back relative; buyers must receive an absolute URL.
+    assert "https://whop.com/checkout/plan_TEST?session=ch_TEST" in out
+    assert "ch_TEST" in out
+
+
+def test_whop_create_link_json_shape(monkeypatch, capsys):
+    run_whop(monkeypatch, WhopRecorder(whop_config_response()),
+             ["create-link", "--title", "X", "--amount", "19.50", "--json"])
+    payload = json.loads(capsys.readouterr().out)
+    assert payload["link_id"] == "ch_TEST"
+    assert payload["url"] == "https://whop.com/checkout/plan_TEST?session=ch_TEST"
+    assert payload["amount"] == 19.5
+    assert payload["price_id"] == "plan_TEST"
+    assert payload["product_id"] == "prod_TEST"
+
+
+def test_whop_status_filters_on_the_configuration_id(monkeypatch, capsys):
+    recorder = WhopRecorder({("GET", "/payments"): whop_page([
+        whop_payment("pay_1", "open"), whop_payment("pay_2", "paid")])})
+    run_whop(monkeypatch, recorder, ["status", "--link-id", "ch_TEST", "--json"])
+    assert recorder.calls[0][3]["checkout_configuration_ids"] == ["ch_TEST"]
+    assert recorder.calls[0][3]["company_id"] == "biz_TEST"  # bare GET /payments is refused live
+    payload = json.loads(capsys.readouterr().out)
+    assert payload == {"link_id": "ch_TEST", "status": "paid", "paid": True,
+                       "sessions": 2, "paid_sessions": ["pay_2"]}
+
+
+def test_whop_status_unpaid_when_nothing_is_paid(monkeypatch, capsys):
+    recorder = WhopRecorder({("GET", "/payments"): whop_page([whop_payment("pay_1", "open")])})
+    run_whop(monkeypatch, recorder, ["status", "--link-id", "ch_TEST"])
+    assert capsys.readouterr().out.strip() == "unpaid"
+
+
+def test_whop_sales_keeps_only_our_tagged_payments(monkeypatch, capsys):
+    recorder = WhopRecorder({("GET", "/payments"): whop_page([
+        whop_payment("pay_ours", "paid"),
+        whop_payment("pay_theirs", "paid", managed=False)])})
+    run_whop(monkeypatch, recorder, ["sales", "--json"])
+    assert recorder.calls[0][3]["statuses"] == ["paid"]  # server narrows, we own-filter
+    sales = json.loads(capsys.readouterr().out)
+    assert [s["session_id"] for s in sales] == ["pay_ours"]
+    sale = sales[0]
+    assert set(sale) == {"link_id", "session_id", "title", "amount_usd", "currency", "paid_at"}
+    assert sale["link_id"] == "ch_TEST"
+    assert sale["amount_usd"] == 19.0
+    assert sale["paid_at"] == "2026-08-15T20:00:00Z"
+
+
+def test_whop_sales_walks_the_cursor(monkeypatch, capsys):
+    pages = [whop_page([whop_payment("pay_1", "paid")], has_next=True, end_cursor="cur_1"),
+             whop_page([whop_payment("pay_2", "paid")])]
+
+    def payments(_params, query):
+        assert query.get("after") == (None if not pages_served else "cur_1")
+        pages_served.append(1)
+        return pages[len(pages_served) - 1]
+
+    pages_served = []
+    recorder = WhopRecorder({("GET", "/payments"): payments})
+    run_whop(monkeypatch, recorder, ["sales", "--json"])
+    assert len(json.loads(capsys.readouterr().out)) == 2
+
+
+def test_whop_missing_key_exits_1_names_the_var_and_opens_no_socket(monkeypatch, capsys):
+    def boom(*_a, **_k):
+        raise AssertionError("no HTTP request may be attempted without WHOP_API_KEY")
+    monkeypatch.setattr(pay.urllib.request, "urlopen", boom)
+    monkeypatch.setenv("PAYMENT_PROVIDER", "whop")
+    monkeypatch.setenv("WHOP_COMPANY_ID", "biz_TEST")   # so the KEY check is what trips
+    with pytest.raises(SystemExit) as exc:
+        pay.main(["create-link", "--title", "X", "--amount", "19"])
+    assert _code(exc) == 1
+    assert "WHOP_API_KEY" in capsys.readouterr().err

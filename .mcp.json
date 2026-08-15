@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "terac": {
+      "type": "http",
+      "url": "https://terac.com/api/mcp"
+    }
+  }
+}

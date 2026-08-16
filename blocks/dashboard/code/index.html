@@ -149,6 +149,12 @@ function renderLedger(d){
   el.innerHTML = h;
 }
 
+// Re-read the ledgers on a cadence. The server re-opens its source files on every request, so this
+// is all it takes to make the page live: a decision written by the approver, or a sale recorded
+// into the CRM, appears with nobody touching the browser. 15s is invisible during a demo and fast
+// enough that a sale can land mid-sentence.
+setInterval(() => load(), 15000);
+
 async function load(){
   document.getElementById("clock").textContent = new Date().toLocaleString();
   renderLedger(await jget("/api/decisions"));

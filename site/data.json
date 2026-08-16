@@ -1,0 +1,75 @@
+{
+  "generated_at": "2026-08-15T23:18:48.066421+00:00",
+  "totals": {
+    "decisions": 4,
+    "human_approvals": 0,
+    "escalations": 2,
+    "experts_hired": 1,
+    "labor_spend_usd": 14.0,
+    "sales": 2,
+    "revenue_usd": 38.0
+  },
+  "decisions": [
+    {
+      "ts": "2026-08-15 12:14",
+      "task_id": "t-20260815-121325",
+      "question": "May Nightshift list the Policy Gate Kit on Whop's marketplace under Whop's standard terms, which take a percentage revenue share on each sale? This is a new distribution agreement with a third-party platform, not a routine sale.",
+      "verdict": "escalated",
+      "reason": "Policy names product pricing and sales but no clause covers entering a revenue-share distribution agreement with a third-party platform; silence is not consent (P9).",
+      "clauses": [],
+      "mode": "agent"
+    },
+    {
+      "ts": "2026-08-15 12:41",
+      "task_id": "t-20260815-124107",
+      "question": "May Nightshift spend up to $15 total on one general-population Terac study (10 participants, shrink ladder to 7 then 5 if priced over $15) to A/B-test the storefront tagline? This is a single outgoing spend serving the active make-the-firs\u2026",
+      "verdict": "approve",
+      "reason": "Single spend is capped at $15, at the P2 ceiling, and serves the active first-sale goal; with $13.50 already spent today the $28.50 day total stays under the $50 P3 cap.",
+      "clauses": [
+        "P2",
+        "P3"
+      ],
+      "mode": "agent"
+    },
+    {
+      "ts": "2026-08-15 12:42",
+      "task_id": "t-20260815-121325",
+      "question": "May Nightshift list the Policy Gate Kit on Whop's marketplace under Whop's standard terms, which take a percentage revenue share on each sale? This is a new distribution agreement with a third-party platform, not a routine sale.",
+      "verdict": "escalated",
+      "reason": "Still no clause on revenue-share distribution agreements with third-party marketplaces; P1 fixes the domain and P4 the price band, neither authorizes a platform contract (P9). Repeat escalation \u2014 policy gap unchanged.",
+      "clauses": [],
+      "mode": "agent"
+    },
+    {
+      "ts": "2026-08-15 15:34",
+      "task_id": "t-20260815-121325",
+      "question": "May Nightshift list the Policy Gate Kit on Whop's marketplace under Whop's standard terms, which take a percentage revenue share on each sale? This is a new distribution agreement with a third-party platform, not a routine sale.",
+      "verdict": "approve",
+      "reason": "I will explain my reasoning here: I approve the proposed marketplace distribution because listing the digital product on a third-party marketplace under standard revenue-share terms can expand market reach and create an additional sales channel without requiring a significant change to the existing\u2026",
+      "clauses": [],
+      "mode": "human"
+    }
+  ],
+  "hires": [
+    {
+      "ts": "2026-08-15 12:15",
+      "question": "May Nightshift list the Policy Gate Kit on Whop's marketplace under Whop's standard terms, which take a percentage revenue share on each sale? This is a new distribution agreement with a third-party platform, not a routine sale.",
+      "provider": "terac",
+      "cost_usd": 14.0,
+      "status": "answered",
+      "answer": "approve: I will explain my reasoning here: I approve the proposed marketplace distribution because listing the digital product on a third-party marketplace under standard revenue-share terms can expand market reach and create an additional sales channel without requiring a significant change to the existing product strategy. Since the current written policies are silent on this type of external distribution, a stand\u2026"
+    }
+  ],
+  "sales": [
+    {
+      "ts": "2026-08-15T23:18:48.037742+00:00",
+      "amount_usd": 19.0,
+      "status": "recorded"
+    },
+    {
+      "ts": "2026-08-15T23:18:48.066421+00:00",
+      "amount_usd": 19.0,
+      "status": "recorded"
+    }
+  ]
+}

@@ -4,87 +4,63 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Thank you</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* Same tokens as the landing and the buy page. This is the page a paying customer actually
+     lands on, so it is the last place the brand should wobble. */
   :root {
-    --bg: #0b0b0d;
-    --panel: #151517;
-    --border: #2a2a2e;
-    --text: #f2f2f0;
-    --muted: #a3a3a8;
-    --accent: #5eead4;
-    --accent-text: #04201b;
+    --ground:    #0A0B10;
+    --raised:    #14161D;
+    --lip:       #E8E3D914;
+    --stone:     #E8E3D9;
+    --stone-dim: #8A857A;
+    --verdigris: #5FA88F;
+    --ground-on-accent: #0A0B10;
+    --display: "Fraunces", Georgia, "Times New Roman", serif;
+    --ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --ease: cubic-bezier(.22, .61, .36, 1);
   }
   * { box-sizing: border-box; }
   html, body {
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    margin: 0; padding: 0;
+    background: var(--ground); color: var(--stone);
+    font-family: var(--ui);
     -webkit-font-smoothing: antialiased;
   }
-  main {
-    max-width: 640px;
-    margin: 0 auto;
-    padding: 32px 20px 64px;
-  }
+  main { max-width: 40rem; margin: 0 auto; padding: 4rem clamp(1.25rem, 5vw, 2rem) 5rem; }
   .eyebrow {
-    font-size: 13px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin: 0 0 8px;
+    font-family: var(--mono); font-size: .75rem; letter-spacing: .22em;
+    text-transform: uppercase; color: var(--stone-dim); margin: 0 0 1rem;
   }
   h1 {
-    font-size: 28px;
-    line-height: 1.2;
-    margin: 0 0 12px;
+    font-family: var(--display); font-weight: 300;
+    font-size: clamp(2rem, 5.5vw, 2.9rem); line-height: 1.08;
+    letter-spacing: -.015em; margin: 0 0 .75rem;
   }
-  .lede {
-    font-size: 17px;
-    color: var(--muted);
-    line-height: 1.5;
-    margin: 0 0 28px;
-  }
+  .lede { font-size: 1.05rem; color: var(--stone-dim); line-height: 1.6; margin: 0 0 2.25rem; }
   .delivery-button {
-    display: block;
-    width: 100%;
-    text-align: center;
-    padding: 18px 24px;
-    background: var(--accent);
-    color: var(--accent-text);
-    font-size: 18px;
-    font-weight: 700;
-    text-decoration: none;
-    border-radius: 12px;
-    border: none;
-    margin: 0 0 24px;
+    display: block; width: 100%; text-align: center;
+    padding: 1.1rem 1.5rem;
+    background: var(--verdigris); color: var(--ground-on-accent);
+    font-family: var(--ui); font-size: 1.05rem; font-weight: 600; letter-spacing: .01em;
+    text-decoration: none; border: none; border-radius: 3px; margin: 0 0 1.5rem;
+    transition: background .18s var(--ease), transform .18s var(--ease);
   }
-  .note {
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--muted);
-    margin: 0 0 16px;
-  }
+  .delivery-button:hover { background: var(--stone); transform: translateY(-1px); }
+  .delivery-button:active { transform: none; }
+  .note { font-size: .875rem; line-height: 1.6; color: var(--stone-dim); margin: 0 0 1rem; }
   .disclosure {
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--muted);
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin: 24px 0 8px;
+    font-size: .875rem; line-height: 1.6; color: var(--stone-dim);
+    background: var(--raised); border: 1px solid var(--lip);
+    border-radius: 3px; padding: 1rem 1.15rem; margin: 1.5rem 0 .5rem;
   }
-  .disclosure strong { color: var(--text); }
+  .disclosure strong { color: var(--stone); font-weight: 600; }
   .error {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px;
-    color: var(--text);
-    font-size: 15px;
-    line-height: 1.5;
+    background: var(--raised); border: 1px solid var(--lip); border-radius: 3px;
+    padding: 1.25rem; color: var(--stone); font-size: .95rem; line-height: 1.6;
   }
 </style>
 </head>

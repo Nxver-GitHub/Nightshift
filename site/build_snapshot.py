@@ -13,7 +13,9 @@ import json
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-OUT = pathlib.Path(__file__).resolve().parent / "data.json"
+# The landing page now lives in the directory Render actually serves, alongside the storefront,
+# so the snapshot has to land there too or the page renders yesterday's numbers.
+OUT = ROOT / "blocks/storefront/site/data.json"
 
 DECISIONS = ROOT / "blocks/approver/code/decisions.jsonl"
 HIRES = ROOT / "blocks/labor/code/hires.jsonl"
@@ -61,6 +63,7 @@ def main():
             "question": clip(h.get("question"), 240),
             "provider": h.get("provider"),
             "cost_usd": h.get("cost_usd"),
+            "priced_usd": h.get("priced_usd"),
             "status": h.get("status"),
             "answer": clip(h.get("answer"), 420),
         }
@@ -80,7 +83,12 @@ def main():
             "human_approvals": 0,  # the claim: no owner ever stood behind a gate
             "escalations": sum(1 for d in decisions if d["verdict"] == "escalated"),
             "experts_hired": len(hires),
-            "labor_spend_usd": round(sum(h["cost_usd"] or 0 for h in hires), 2),
+            # What actually left the company, not what was authorised. cost_usd is the ceiling the
+            # approver signed off ($14); priced_usd is what Terac charged ($13.50). The ledger and
+            # the deck both report the charge, so this has to agree with them.
+            "labor_spend_usd": round(
+                sum((h["priced_usd"] if h["priced_usd"] is not None else h["cost_usd"]) or 0
+                    for h in hires), 2),
             "sales": len(sales),
             "revenue_usd": round(sum(s["amount_usd"] or 0 for s in sales), 2),
         },

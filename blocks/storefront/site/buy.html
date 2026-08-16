@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product</title>
+<style>
+  /* Self-contained, no CDN, no build step. One accent color, dark, phone-first. */
+  :root {
+    --bg: #0b0b0d;
+    --panel: #151517;
+    --border: #2a2a2e;
+    --text: #f2f2f0;
+    --muted: #a3a3a8;
+    --accent: #5eead4; /* single accent color */
+    --accent-text: #04201b;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  main {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 32px 20px 64px;
+  }
+  .eyebrow {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 8px;
+  }
+  h1 {
+    font-size: 30px;
+    line-height: 1.15;
+    margin: 0 0 12px;
+  }
+  .price {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 0 0 20px;
+  }
+  .tagline {
+    font-size: 17px;
+    color: var(--muted);
+    margin: 0 0 28px;
+    line-height: 1.5;
+  }
+  .copy p {
+    font-size: 16px;
+    line-height: 1.65;
+    color: var(--text);
+    margin: 0 0 18px;
+  }
+  .buy-wrap {
+    margin: 32px 0 16px;
+  }
+  .buy-button {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 18px 24px;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: 18px;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 12px;
+    border: none;
+  }
+  .buy-button:active { opacity: 0.85; }
+  /* P7: disclosure sits visibly next to the buy action, not tucked in a footer tooltip. */
+  .disclosure {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--muted);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin: 0 0 8px;
+  }
+  .disclosure strong { color: var(--text); }
+  footer {
+    margin-top: 40px;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+  }
+  .error {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px;
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+<main id="app">
+  <!-- Rendered entirely from ./product.json — this file never hardcodes product content. -->
+  <p class="error">Loading…</p>
+</main>
+
+<script>
+  // Fetch the one content seam. Anyone editing product.json needs to touch nothing else here.
+  async function loadProduct() {
+    const app = document.getElementById("app");
+    try {
+      const res = await fetch("./product.json", { cache: "no-store" });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const p = await res.json();
+      render(app, p);
+    } catch (err) {
+      // Never a blank page: show a plain, readable error instead.
+      app.innerHTML =
+        '<p class="error">Something went wrong loading this product. ' +
+        "Please refresh, or try again shortly. (" +
+        escapeHtml(String(err && err.message ? err.message : err)) +
+        ")</p>";
+    }
+  }
+
+  function escapeHtml(s) {
+    const d = document.createElement("div");
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  function formatPrice(amount, currency) {
+    const symbol = (currency || "usd").toLowerCase() === "usd" ? "$" : (currency || "").toUpperCase() + " ";
+    // amount is whole units (dollars), matches pay.py's --amount contract.
+    const num = Number(amount);
+    const display = Number.isInteger(num) ? String(num) : num.toFixed(2);
+    return symbol + display;
+  }
+
+  function render(app, p) {
+    document.title = p.title ? p.title + " — " + (p.company || "") : "Product";
+
+    const copyHtml = (p.copy || [])
+      .map(function (para) { return "<p>" + escapeHtml(para) + "</p>"; })
+      .join("");
+
+    app.innerHTML =
+      '<p class="eyebrow">' + escapeHtml(p.company || "") + "</p>" +
+      "<h1>" + escapeHtml(p.title || "") + "</h1>" +
+      '<p class="price">' + escapeHtml(formatPrice(p.price_usd, p.currency)) + "</p>" +
+      '<p class="tagline">' + escapeHtml(p.tagline || "") + "</p>" +
+      '<div class="copy">' + copyHtml + "</div>" +
+      '<div class="buy-wrap">' +
+      '<a class="buy-button" id="buy-button" href="' + escapeHtml(p.checkout_url || "#") + '">Buy — ' +
+      escapeHtml(formatPrice(p.price_usd, p.currency)) +
+      "</a>" +
+      "</div>" +
+      '<p class="disclosure"><strong>Disclosure:</strong> ' + escapeHtml(p.disclosure || "") + "</p>" +
+      "<footer>Instant delivery. No account required.</footer>";
+  }
+
+  loadProduct();
+</script>
+</body>
+</html>

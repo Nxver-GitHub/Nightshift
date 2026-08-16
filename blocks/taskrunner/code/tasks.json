@@ -7,7 +7,7 @@
       "project": "nightshift",
       "due": "",
       "priority": "normal",
-      "status": "waiting_owner",
+      "status": "done",
       "claimed_by": null,
       "delegate_session_id": null,
       "email": null,
@@ -17,11 +17,12 @@
         "2026-08-15 12:13 — created by agent",
         "2026-08-15 12:13 — question asked: May Nightshift list the Policy Gate Kit on Whop's marketplace under Whop's standard terms, which take a percentage revenue share on each sale? This is a new distribution agreement with a third-party platform, not a routine sale.",
         "2026-08-15 15:34 — answered via hired human expert (terac, $13.5)",
-        "2026-08-15 15:34 — Q/A consumed — « May Nightshift list the Policy Gate Kit on Whop's marketplace under Whop's standard terms, which take a percentage revenue share on each sale? This is a new distribution agreement with a third-party platform, not a routine sale. » -> « APPROVED — I will explain my reasoning here: I approve the proposed marketplace distribution because listing the digital product on a third-party marketplace under standard revenue-share terms can expand market reach and create an additional sales channel without requiring a significant change to the existing product strategy. Since the current written policies are silent on this type of external distribution, a standard revenue-share arrangement provides a reasonable and commercially established framework, provided that the agreement does not introduce material risks involving exclusivity, intellectual property, compliance, or unfavorable contractual obligations. [via hired expert] » (2026-08-15 15:34)"
+        "2026-08-15 15:34 — Q/A consumed — « May Nightshift list the Policy Gate Kit on Whop's marketplace under Whop's standard terms, which take a percentage revenue share on each sale? This is a new distribution agreement with a third-party platform, not a routine sale. » -> « APPROVED — I will explain my reasoning here: I approve the proposed marketplace distribution because listing the digital product on a third-party marketplace under standard revenue-share terms can expand market reach and create an additional sales channel without requiring a significant change to the existing product strategy. Since the current written policies are silent on this type of external distribution, a standard revenue-share arrangement provides a reasonable and commercially established framework, provided that the agreement does not introduce material risks involving exclusivity, intellectual property, compliance, or unfavorable contractual obligations. [via hired expert] » (2026-08-15 15:34)",
+        "2026-08-15 17:49 — Gate answered: a Terac-hired human approved the Whop revenue-share listing at 15:34 for $13.50 (decisions.jsonl, mode=human). The listing shipped with the P7 disclosure (04beb81). Closing the task: the question it was parked on has been decided and the work it gated is complete."
       ],
       "created_at": "2026-08-15 12:13",
       "started_at": null,
-      "done_at": null,
+      "done_at": "2026-08-15 17:49",
       "question": null
     },
     {
@@ -51,6 +52,89 @@
         "asked_at": "2026-08-15 12:41",
         "answer": "APPROVED — Single spend is capped at $15, at the P2 ceiling, and serves the active first-sale goal; with $13.50 already spent today the $28.50 day total stays under the $50 P3 cap. [policy: P2, P3]",
         "answered_at": "2026-08-15 12:41"
+      }
+    },
+    {
+      "id": "t-20260815-175647",
+      "title": "Reprice the Policy Gate Kit to $24 for a price-sensitivity test",
+      "description": "",
+      "project": "",
+      "due": "",
+      "priority": "high",
+      "status": "cancelled",
+      "claimed_by": null,
+      "delegate_session_id": null,
+      "email": null,
+      "goal": null,
+      "finalization": null,
+      "journal": [
+        "2026-08-15 17:56 — created by agent",
+        "2026-08-15 17:56 — question asked: May Nightshift reprice the Policy Gate Kit from $19 to $24 for the rest of today to test price sensitivity? This is a repricing of the existing listed product, not a new offer.",
+        "2026-08-15 17:58 — Created as a demo rehearsal of the live-decision path; the approver pass could not run from this shell (the claude CLI is not on PATH here), so the question was never answered. Cancelled rather than left parked: an unanswered question on the board that no agent is working is a false signal about the queue."
+      ],
+      "created_at": "2026-08-15 17:56",
+      "started_at": null,
+      "done_at": null,
+      "question": {
+        "text": "May Nightshift reprice the Policy Gate Kit from $19 to $24 for the rest of today to test price sensitivity? This is a repricing of the existing listed product, not a new offer.",
+        "asked_at": "2026-08-15 17:56",
+        "answer": null,
+        "answered_at": null
+      }
+    },
+    {
+      "id": "t-20260815-180317",
+      "title": "Reprice the Policy Gate Kit to $24 for a price-sensitivity test",
+      "description": "",
+      "project": "",
+      "due": "",
+      "priority": "high",
+      "status": "waiting_owner",
+      "claimed_by": null,
+      "delegate_session_id": null,
+      "email": null,
+      "goal": null,
+      "finalization": null,
+      "journal": [
+        "2026-08-15 18:03 — created by agent",
+        "2026-08-15 18:03 — question asked: May Nightshift reprice the Policy Gate Kit from $19 to $24 for the rest of today to test price sensitivity? This is a repricing of the existing listed product, not a new offer.",
+        "2026-08-15 18:10 — answered by approver agent (approve)"
+      ],
+      "created_at": "2026-08-15 18:03",
+      "started_at": null,
+      "done_at": null,
+      "question": {
+        "text": "May Nightshift reprice the Policy Gate Kit from $19 to $24 for the rest of today to test price sensitivity? This is a repricing of the existing listed product, not a new offer.",
+        "asked_at": "2026-08-15 18:03",
+        "answer": "APPROVED — Repricing an existing digital product from $19 to $24 stays inside the $5-$25 band P4 permits. [policy: P4]",
+        "answered_at": "2026-08-15 18:10"
+      }
+    },
+    {
+      "id": "t-20260815-181239",
+      "title": "Decide on an enterprise licence request from a 40-person company",
+      "description": "",
+      "project": "",
+      "due": "",
+      "priority": "high",
+      "status": "waiting_owner",
+      "claimed_by": null,
+      "delegate_session_id": null,
+      "email": null,
+      "goal": null,
+      "finalization": null,
+      "journal": [
+        "2026-08-15 18:12 — created by agent",
+        "2026-08-15 18:13 — question asked: A 40-person engineering org wants to buy the Policy Gate Kit under a custom enterprise licence for their whole team: a negotiated flat fee instead of the listed price, plus an indemnity clause covering decisions their agents make using our policy. May Nightshift agree?"
+      ],
+      "created_at": "2026-08-15 18:12",
+      "started_at": null,
+      "done_at": null,
+      "question": {
+        "text": "A 40-person engineering org wants to buy the Policy Gate Kit under a custom enterprise licence for their whole team: a negotiated flat fee instead of the listed price, plus an indemnity clause covering decisions their agents make using our policy. May Nightshift agree?",
+        "asked_at": "2026-08-15 18:13",
+        "answer": null,
+        "answered_at": null
       }
     }
   ]

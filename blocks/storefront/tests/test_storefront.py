@@ -75,7 +75,7 @@ def site_server():
 def broken_site_server(tmp_path_factory):
     """Serves a copy of the site with product.json removed, to exercise the fetch-failure path."""
     tmp_dir = tmp_path_factory.mktemp("storefront-no-product-json")
-    for name in ("index.html", "thanks.html", "stub-checkout.html"):
+    for name in ("buy.html", "thanks.html", "stub-checkout.html"):
         shutil.copy(os.path.join(SITE, name), os.path.join(tmp_dir, name))
     # Deliberately do NOT copy product.json.
     srv = _ServerHandle(str(tmp_dir))
@@ -94,7 +94,7 @@ def page():
 
 def test_index_renders_title_price_tagline(page, site_server):
     """(a) index renders title/price/tagline from product.json."""
-    page.goto(site_server.base_url + "/index.html")
+    page.goto(site_server.base_url + "/buy.html")
     page.wait_for_selector("h1")
     assert "Policy Gate Kit" in page.content()
     assert "$19" in page.content()
@@ -103,7 +103,7 @@ def test_index_renders_title_price_tagline(page, site_server):
 
 def test_p7_disclosure_visible_on_index(page, site_server):
     """(b) the P7 disclosure text is visible on the page, near the buy button — not hidden."""
-    page.goto(site_server.base_url + "/index.html")
+    page.goto(site_server.base_url + "/buy.html")
     page.wait_for_selector(".disclosure")
     disclosure = page.locator(".disclosure")
     assert disclosure.is_visible()
@@ -113,13 +113,17 @@ def test_p7_disclosure_visible_on_index(page, site_server):
     assert buy.is_visible()
 
 
-def test_buy_button_navigates_to_checkout_url(page, site_server):
-    """(c) clicking Buy navigates to checkout_url (the stub page)."""
-    page.goto(site_server.base_url + "/index.html")
+def test_buy_button_points_at_checkout_url(page, site_server):
+    """(c) the Buy button targets exactly whatever checkout_url says.
+
+    This used to click through and assert it landed on stub-checkout.html. That baked the stub
+    into the test, so the day checkout_url became a live Stripe link the suite failed on a
+    correct change — and following the link would have put a test on the network, against a real
+    payment page. Assert the contract instead: the button goes where product.json points."""
+    page.goto(site_server.base_url + "/buy.html")
     page.wait_for_selector("#buy-button")
-    page.click("#buy-button")
-    page.wait_for_url("**/stub-checkout.html")
-    assert "Test stand-in" in page.content()
+    href = page.locator("#buy-button").get_attribute("href")
+    assert href == product()["checkout_url"]
 
 
 def test_stub_checkout_simulate_lands_on_thanks_with_delivery_link(page, site_server):
@@ -149,7 +153,7 @@ def test_delivery_url_is_downloadable(page, site_server):
 
 def test_product_json_fetch_failure_shows_error(page, broken_site_server):
     """(e) product.json fetch failure path shows the error message, never a blank page."""
-    page.goto(broken_site_server.base_url + "/index.html")
+    page.goto(broken_site_server.base_url + "/buy.html")
     # Give the fetch a moment to fail and the error branch to render.
     page.wait_for_selector(".error", timeout=5000)
     error_text = page.locator(".error").inner_text()

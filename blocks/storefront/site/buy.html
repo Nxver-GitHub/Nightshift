@@ -4,108 +4,86 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Product</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  /* Self-contained, no CDN, no build step. One accent color, dark, phone-first. */
+  /* Same tokens as the landing page, so the buy step doesn't feel like a different company.
+     Fonts degrade to system serif/sans if Google Fonts is blocked; nothing here depends on them. */
   :root {
-    --bg: #0b0b0d;
-    --panel: #151517;
-    --border: #2a2a2e;
-    --text: #f2f2f0;
-    --muted: #a3a3a8;
-    --accent: #5eead4; /* single accent color */
-    --accent-text: #04201b;
+    --ground:    #0A0B10;
+    --raised:    #14161D;
+    --lip:       #E8E3D914;
+    --stone:     #E8E3D9;
+    --stone-dim: #8A857A;
+    --verdigris: #5FA88F;
+    --ground-on-accent: #0A0B10;
+    --display: "Fraunces", Georgia, "Times New Roman", serif;
+    --ui: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --ease: cubic-bezier(.22, .61, .36, 1);
   }
   * { box-sizing: border-box; }
   html, body {
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    margin: 0; padding: 0;
+    background: var(--ground); color: var(--stone);
+    font-family: var(--ui);
     -webkit-font-smoothing: antialiased;
   }
-  main {
-    max-width: 640px;
-    margin: 0 auto;
-    padding: 32px 20px 64px;
+  .back {
+    display: inline-block; font-family: var(--mono); font-size: .78rem;
+    letter-spacing: .06em; color: var(--stone-dim); text-decoration: none;
+    padding: 1.5rem 0 0 clamp(1.25rem, 5vw, 2rem);
   }
+  .back:hover { color: var(--stone); }
+  main { max-width: 40rem; margin: 0 auto; padding: 2rem clamp(1.25rem, 5vw, 2rem) 5rem; }
   .eyebrow {
-    font-size: 13px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin: 0 0 8px;
+    font-family: var(--mono); font-size: .75rem; letter-spacing: .22em;
+    text-transform: uppercase; color: var(--stone-dim); margin: 0 0 1rem;
   }
   h1 {
-    font-size: 30px;
-    line-height: 1.15;
-    margin: 0 0 12px;
+    font-family: var(--display); font-weight: 300;
+    font-size: clamp(2.1rem, 6vw, 3.1rem); line-height: 1.06;
+    letter-spacing: -.015em; margin: 0 0 .75rem;
   }
   .price {
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--accent);
-    margin: 0 0 20px;
+    font-family: var(--mono); font-size: 1.5rem; font-weight: 500;
+    color: var(--verdigris); margin: 0 0 1.5rem;
   }
   .tagline {
-    font-size: 17px;
-    color: var(--muted);
-    margin: 0 0 28px;
-    line-height: 1.5;
+    font-size: 1.05rem; line-height: 1.55; color: var(--stone-dim); margin: 0 0 2rem;
   }
-  .copy p {
-    font-size: 16px;
-    line-height: 1.65;
-    color: var(--text);
-    margin: 0 0 18px;
-  }
-  .buy-wrap {
-    margin: 32px 0 16px;
-  }
+  .copy p { font-size: 1rem; line-height: 1.7; color: var(--stone); margin: 0 0 1.15rem; }
+  .buy-wrap { margin: 2.5rem 0 1rem; }
   .buy-button {
-    display: block;
-    width: 100%;
-    text-align: center;
-    padding: 18px 24px;
-    background: var(--accent);
-    color: var(--accent-text);
-    font-size: 18px;
-    font-weight: 700;
-    text-decoration: none;
-    border-radius: 12px;
-    border: none;
+    display: block; width: 100%; text-align: center;
+    padding: 1.1rem 1.5rem;
+    background: var(--verdigris); color: var(--ground-on-accent);
+    font-family: var(--ui); font-size: 1.05rem; font-weight: 600; letter-spacing: .01em;
+    text-decoration: none; border: none; border-radius: 3px;
+    transition: background .18s var(--ease), transform .18s var(--ease);
   }
-  .buy-button:active { opacity: 0.85; }
+  .buy-button:hover { background: var(--stone); transform: translateY(-1px); }
+  .buy-button:active { transform: none; }
   /* P7: disclosure sits visibly next to the buy action, not tucked in a footer tooltip. */
   .disclosure {
-    font-size: 14px;
-    line-height: 1.5;
-    color: var(--muted);
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin: 0 0 8px;
+    font-size: .875rem; line-height: 1.6; color: var(--stone-dim);
+    background: var(--raised); border: 1px solid var(--lip);
+    border-radius: 3px; padding: 1rem 1.15rem; margin: 0 0 .5rem;
   }
-  .disclosure strong { color: var(--text); }
+  .disclosure strong { color: var(--stone); font-weight: 600; }
   footer {
-    margin-top: 40px;
-    font-size: 13px;
-    color: var(--muted);
-    text-align: center;
+    margin-top: 3rem; font-family: var(--mono); font-size: .75rem;
+    letter-spacing: .06em; color: var(--stone-dim); text-align: center;
   }
   .error {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 20px;
-    color: var(--text);
-    font-size: 15px;
-    line-height: 1.5;
+    background: var(--raised); border: 1px solid var(--lip); border-radius: 3px;
+    padding: 1.25rem; color: var(--stone); font-size: .95rem; line-height: 1.6;
   }
 </style>
 </head>
 <body>
+<a class="back" href="index.html">&larr; Nightshift</a>
 <main id="app">
   <!-- Rendered entirely from ./product.json — this file never hardcodes product content. -->
   <p class="error">Loading…</p>

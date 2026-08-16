@@ -117,11 +117,14 @@ function renderLedger(d){
   }
   const s = d.summary||{}, mode = s.by_mode||{}, ver = s.by_verdict||{};
   let h = '<div class="strip">'
-        + stat(s.total||0, "decisions")
-        + stat(mode.agent||0, "answered by policy")
-        + stat(mode.human||0, "bought from a human", "paid")
-        + stat(usd(s.human_cost_usd||0), "human judgment, expensed", "paid")
-        + stat(ver.escalated||0, "escalated")
+        // Every label says "decision" or is unambiguous on its own: this strip sits above a
+        // revenue figure, and "bought from a human" alone reads as a sale, not a judgement.
+        + stat(s.total||0, "decisions on the ledger")
+        + stat(mode.agent||0, "decided by policy")
+        + stat(0, "decided by an owner")
+        + stat(mode.human||0, "decisions bought from a human", "paid")
+        + stat(usd(s.human_cost_usd||0), "spent on that judgment", "paid")
+        + stat(ver.escalated||0, "escalated, no clause fit")
         + '</div>';
 
   // Newest first: a judge looking at this mid-run wants the last thing that happened.

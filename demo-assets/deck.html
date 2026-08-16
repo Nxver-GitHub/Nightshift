@@ -4,62 +4,73 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Nightshift deck</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-  /* Self-contained: no fonts, no scripts, no images fetched. Presents from a browser with no
-     network, and prints to PDF one slide per page for the submission. */
+  /* Same palette and type as nightshift-d25l.onrender.com, so the deck and the product read as one
+     thing. The webfonts are the only external fetch: they fall back to Georgia and Menlo, which
+     keeps the serif-on-dark character if the room's network is dead. PDF export embeds the real
+     faces, so the submission artifact is unaffected either way. */
   :root {
-    --bg:#0d0d10; --ink:#f2f2f4; --muted:#8f8fa0; --line:#2a2a34;
-    --accent:#a99cf5; --ok:#4ec9a0; --warn:#f0b866; --bad:#f08a8a; --fill:#ffcf6b;
+    --bg:#0A0B10; --raised:#14161D; --ink:#E8E3D9; --muted:#8A857A; --line:#E8E3D922;
+    --accent:#5FA88F; --ok:#5FA88F; --warn:#E0A144; --bad:#C4553D; --fill:#E0A144;
+    --display:"Fraunces", Georgia, "Times New Roman", serif;
+    --ui:ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   * { box-sizing:border-box; margin:0; padding:0; }
   html, body { height:100%; }
   body { background:var(--bg); color:var(--ink); overflow:hidden;
-         font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,sans-serif; }
+         font:16px/1.55 var(--ui); -webkit-font-smoothing:antialiased; }
   .slide { position:absolute; inset:0; display:none; flex-direction:column; justify-content:center;
            padding:6vh 8vw; }
   .slide.on { display:flex; }
-  .kicker { color:var(--accent); font-size:1.05rem; letter-spacing:.18em; text-transform:uppercase;
-            font-weight:600; margin-bottom:1.6rem; }
-  h1 { font-size:clamp(2.6rem,6.5vw,5.2rem); line-height:1.02; letter-spacing:-.03em; font-weight:700; }
-  h2 { font-size:clamp(2rem,4.4vw,3.4rem); line-height:1.08; letter-spacing:-.025em; font-weight:700;
-       margin-bottom:1.4rem; }
+  .kicker { color:var(--accent); font-family:var(--mono); font-size:.85rem; letter-spacing:.22em;
+            text-transform:uppercase; font-weight:500; margin-bottom:1.6rem; }
+  h1 { font-family:var(--display); font-size:clamp(2.6rem,6.5vw,5.2rem); line-height:1.03;
+       letter-spacing:-.02em; font-weight:300; }
+  h2 { font-family:var(--display); font-size:clamp(2rem,4.4vw,3.4rem); line-height:1.08;
+       letter-spacing:-.015em; font-weight:300; margin-bottom:1.4rem; }
   p.lead { font-size:clamp(1.1rem,1.9vw,1.6rem); color:var(--muted); max-width:34ch; margin-top:1.4rem; }
   p.body { font-size:clamp(1rem,1.5vw,1.3rem); max-width:52ch; margin-top:1rem; color:var(--ink); }
-  .big { font-size:clamp(1.6rem,3vw,2.4rem); line-height:1.25; max-width:26ch; font-weight:600; }
-  code, pre { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
-  pre { background:#15151b; border:1px solid var(--line); border-left:3px solid var(--accent);
-        border-radius:8px; padding:1rem 1.2rem; font-size:clamp(.8rem,1.15vw,1.05rem);
-        margin-top:1.6rem; max-width:60ch; overflow:auto; color:#d8d8e4; }
+  .big { font-family:var(--display); font-size:clamp(1.6rem,3vw,2.4rem); line-height:1.25;
+         max-width:26ch; font-weight:400; }
+  code, pre { font-family:var(--mono); }
+  pre { background:var(--raised); border:1px solid var(--line); border-left:2px solid var(--accent);
+        border-radius:3px; padding:1rem 1.2rem; font-size:clamp(.8rem,1.15vw,1.05rem);
+        margin-top:1.6rem; max-width:60ch; overflow:auto; color:var(--ink); }
   .muted { color:var(--muted); }
   .fill { color:var(--fill); border-bottom:2px dashed var(--fill); padding:0 .15em; font-weight:700; }
   .cols { display:grid; grid-template-columns:1fr 1fr; gap:3rem; margin-top:1.4rem; align-items:start; }
   @media (max-width:900px){ .cols { grid-template-columns:1fr; gap:1.4rem; } }
-  .stat { font-size:clamp(2.4rem,5vw,4rem); font-weight:700; letter-spacing:-.03em; line-height:1; }
-  .statlabel { color:var(--muted); font-size:.95rem; text-transform:uppercase; letter-spacing:.08em;
-               margin-top:.4rem; }
+  .stat { font-family:var(--mono); font-size:clamp(2.2rem,4.6vw,3.6rem); font-weight:500;
+         letter-spacing:-.02em; line-height:1; }
+  .statlabel { color:var(--muted); font-family:var(--mono); font-size:.72rem; text-transform:uppercase;
+               letter-spacing:.18em; margin-top:.5rem; }
   .row { display:flex; gap:2.6rem; flex-wrap:wrap; margin-top:2rem; }
   ul { margin-top:1.2rem; list-style:none; }
   li { font-size:clamp(1rem,1.6vw,1.35rem); padding:.42rem 0 .42rem 1.6rem; position:relative;
        max-width:50ch; }
   li::before { content:"→"; position:absolute; left:0; color:var(--accent); }
   /* the ledger rows, styled like the real dashboard */
-  .dec { border:1px solid var(--line); border-radius:10px; padding:.75rem 1rem; margin-top:.7rem;
+  .dec { border:1px solid var(--line); border-radius:3px; padding:.75rem 1rem; margin-top:.7rem;
          display:grid; grid-template-columns:110px 1fr auto; gap:1rem; align-items:center;
          font-size:clamp(.8rem,1.15vw,1.05rem); max-width:78ch; }
   .dec.human { border-color:var(--accent); }
-  .v { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
-       text-align:center; padding:.15rem .5rem; border-radius:20px; border:1px solid; }
+  .v { font-family:var(--mono); font-size:.68rem; font-weight:500; text-transform:uppercase;
+       letter-spacing:.12em; text-align:center; padding:.2rem .5rem; border-radius:2px; border:1px solid; }
   .v.esc { color:var(--warn); border-color:var(--warn); }
   .v.app { color:var(--ok); border-color:var(--ok); }
-  .who { font-size:.72rem; color:var(--muted); white-space:nowrap; }
+  .who { font-family:var(--mono); font-size:.7rem; color:var(--muted); white-space:nowrap; }
   .who.h { color:var(--accent); font-weight:700; }
   /* Marks the ledger rows below as illustrative. They are styled like the real dashboard, and
      slide 3 invites the audience to verify things, so the distinction has to be visible. */
-  .exlabel { font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted);
-             border:1px solid var(--line); border-radius:20px; padding:2px 10px;
+  .exlabel { font-family:var(--mono); font-size:.7rem; letter-spacing:.18em; text-transform:uppercase; color:var(--muted);
+             border:1px solid var(--line); border-radius:2px; padding:2px 10px;
              align-self:flex-start;   /* a flex child stretches otherwise, however it is displayed */
              margin-bottom:.6rem; }
-  .nav { position:fixed; bottom:1.1rem; right:1.4rem; color:var(--muted); font-size:.8rem;
+  .nav { position:fixed; bottom:1.1rem; right:1.4rem; color:var(--muted); font-family:var(--mono); font-size:.72rem;
          letter-spacing:.06em; }
   .hint { position:fixed; bottom:1.1rem; left:1.4rem; color:var(--line); font-size:.75rem; }
   /* Print: redefine the tokens rather than patching individual rules. Every rule already reads
@@ -67,8 +78,8 @@
      misses anything with higher specificity: p.body beats .muted, and printed near-white on
      white. */
   @media print {
-    :root { --bg:#fff; --ink:#111; --muted:#4a4a55; --line:#c9c9d2;
-            --accent:#4b3fb0; --ok:#0d7a5c; --warn:#8a5a00; --fill:#8a5a00; }
+    :root { --bg:#fff; --raised:#F4F2EC; --ink:#14161D; --muted:#585349; --line:#CFC9BC;
+            --accent:#2F6B57; --ok:#2F6B57; --warn:#8A5A00; --bad:#8C3A28; --fill:#8A5A00; }
     body { overflow:visible; background:var(--bg); color:var(--ink); }
     .slide { display:flex !important; position:relative; inset:auto; page-break-after:always;
              height:100vh; }
